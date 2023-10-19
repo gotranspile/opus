@@ -1,0 +1,86 @@
+package: libopus
+subpackage: true
+vcs: https://gitlab.xiph.org/xiph/opus.git
+branch: 'v1.4'
+root: .
+out: ./libopus
+int_size: 8
+ptr_size: 8
+use_go_int: false
+include:
+  - './include'
+  - './celt'
+  - './silk'
+  - './silk/float'
+predef: |
+  // TODO
+define:
+  - name: USE_ALLOCA
+  - name: OPUS_BUILD
+  - name: ALLOC_NONE
+    value: '1'
+  - name: alloca
+    value: malloc
+  - name: opus_alloc
+    value: malloc
+  - name: opus_free
+    value: free
+files:
+  - name: src/tansig_table.h
+  - name: src/opus_private.h
+  - name: include/opus_defines.h
+  - name: src/analysis.c
+  - name: src/mlp.c
+  - name: src/mlp_data.c
+  - name: src/opus.c
+  - name: src/opus_decoder.c
+  - name: src/opus_encoder.c
+  - name: src/repacketizer.c
+  # ==== SILK ====
+  - name: silk/control.h
+  - name: silk/define.h
+  - name: silk/errors.h
+  - name: silk/structs.h
+  - name: silk/typedef.h
+  - name: silk/tuning_parameters.h
+  - name: silk/pitch_est_defines.h
+  - name: silk/resampler_structs.h
+    predef: |
+      #include <stdint.h>
+      #define opus_int int
+      #define opus_int32 int32_t
+      #define opus_int16 int16_t
+  - name: silk/float/structs_FLP.h
+  - name: silk/float/SigProc_FLP.h
+  - name: silk/NLSF2A.c
+    idents:
+      - name: QA
+        rename: NLSF2A_QA
+  - name: silk/*.c
+  # ==== CELT ====
+  - name: celt/arch.h
+  - name: celt/entcode.c
+    skip:
+      - opus_uint32
+  - name: celt/celt_encoder.c
+    disabled: true # FIXME: if in for init incorrectly unwrapped
+  - name: celt/*.c
+  # ==== Additional Go code ====
+  - name: types.go
+    content: |
+      package libopus
+      
+      const ALLOC_NONE = 1
+      
+      type opus_int16 = int16
+      type opus_uint16 = uint16
+      type opus_int32 = int32
+      type opus_uint32 = uint32
+  - name: opus_test.go
+    content: |
+      package libopus
+      
+      import "testing"
+      
+      func TestOpus(t *testing.T) {
+      }
