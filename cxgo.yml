@@ -36,6 +36,40 @@ idents:
     fields:
       - name: buf
         type: slice
+  - name: silk_NLSF_CB_struct
+    fields:
+      - name: CB1_NLSF_Q8
+        type: slice
+      - name: CB1_Wght_Q9
+        type: slice
+      - name: CB1_iCDF
+        type: slice
+      - name: pred_Q8
+        type: slice
+      - name: ec_sel
+        type: slice
+      - name: ec_iCDF
+        type: slice
+      - name: ec_Rates_Q5
+        type: slice
+      - name: deltaMin_Q15
+        type: slice
+  - name: silk_encoder_state
+    fields:
+      - name: pitch_lag_low_bits_iCDF
+        type: slice
+      - name: pitch_contour_iCDF
+        type: slice
+  - name: silk_decoder_state
+    fields:
+      - name: pitch_lag_low_bits_iCDF
+        type: slice
+      - name: pitch_contour_iCDF
+        type: slice
+  - name: _silk_resampler_state_struct
+    fields:
+      - name: Coefs
+        type: slice
   - name: DenseLayer
     fields:
       - name: bias
@@ -168,7 +202,7 @@ files:
       - old: 'uint8 = math.MaxUint8'
         new: '= math.MaxUint8'
   - name: silk/errors.h
-  - name: silk/structs.h
+#  - name: silk/structs.h # DONE
   - name: silk/typedef.h
     replace:
       - old: 'uint32 ='
@@ -180,9 +214,7 @@ files:
   - name: silk/tuning_parameters.h
   - name: silk/pitch_est_defines.h
   - name: silk/resampler_private.h
-  - name: silk/resampler_structs.h
-    predef: |
-      #include "opus_types.h"
+#  - name: silk/resampler_structs.h # DONE
   - name: silk/float/structs_FLP.h
   - name: silk/float/SigProc_FLP.h
   - name: silk/SigProc_FIX.h

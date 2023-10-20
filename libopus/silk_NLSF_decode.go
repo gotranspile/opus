@@ -36,8 +36,8 @@ func silk_NLSF_decode(pNLSF_Q15 *int16, NLSFIndices *int8, psNLSF_CB *silk_NLSF_
 	)
 	silk_NLSF_unpack(ec_ix[:], pred_Q8[:], psNLSF_CB, int(*NLSFIndices))
 	silk_NLSF_residual_dequant(res_Q10[:], []int8((*int8)(unsafe.Add(unsafe.Pointer(NLSFIndices), 1))), pred_Q8[:], int(psNLSF_CB.QuantStepSize_Q16), psNLSF_CB.Order)
-	pCB_element = (*uint8)(unsafe.Add(unsafe.Pointer(psNLSF_CB.CB1_NLSF_Q8), int(*NLSFIndices)*int(psNLSF_CB.Order)))
-	pCB_Wght_Q9 = (*int16)(unsafe.Add(unsafe.Pointer(psNLSF_CB.CB1_Wght_Q9), unsafe.Sizeof(int16(0))*uintptr(int(*NLSFIndices)*int(psNLSF_CB.Order))))
+	pCB_element = (*uint8)(unsafe.Pointer(&psNLSF_CB.CB1_NLSF_Q8[int(*NLSFIndices)*int(psNLSF_CB.Order)]))
+	pCB_Wght_Q9 = &psNLSF_CB.CB1_Wght_Q9[int(*NLSFIndices)*int(psNLSF_CB.Order)]
 	for i = 0; i < int(psNLSF_CB.Order); i++ {
 		NLSF_Q15_tmp = int32(int(int32(int(int32(int(uint32(int32(res_Q10[i])))<<14))/int(*(*int16)(unsafe.Add(unsafe.Pointer(pCB_Wght_Q9), unsafe.Sizeof(int16(0))*uintptr(i)))))) + int(int32(int(uint32(int16(*(*uint8)(unsafe.Add(unsafe.Pointer(pCB_element), i)))))<<7)))
 		if 0 > math.MaxInt16 {
@@ -56,5 +56,5 @@ func silk_NLSF_decode(pNLSF_Q15 *int16, NLSFIndices *int8, psNLSF_CB *silk_NLSF_
 			*(*int16)(unsafe.Add(unsafe.Pointer(pNLSF_Q15), unsafe.Sizeof(int16(0))*uintptr(i))) = int16(NLSF_Q15_tmp)
 		}
 	}
-	silk_NLSF_stabilize(pNLSF_Q15, psNLSF_CB.DeltaMin_Q15, int(psNLSF_CB.Order))
+	silk_NLSF_stabilize(pNLSF_Q15, &psNLSF_CB.DeltaMin_Q15[0], int(psNLSF_CB.Order))
 }

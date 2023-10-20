@@ -16,15 +16,15 @@ func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int, fs_API_Hz int32)
 	if psDec.Fs_kHz != fs_kHz || frame_length != psDec.Frame_length {
 		if fs_kHz == 8 {
 			if psDec.Nb_subfr == MAX_NB_SUBFR {
-				psDec.Pitch_contour_iCDF = &silk_pitch_contour_NB_iCDF[0]
+				psDec.Pitch_contour_iCDF = silk_pitch_contour_NB_iCDF[:][:]
 			} else {
-				psDec.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_NB_iCDF[0]
+				psDec.Pitch_contour_iCDF = silk_pitch_contour_10_ms_NB_iCDF[:][:]
 			}
 		} else {
 			if psDec.Nb_subfr == MAX_NB_SUBFR {
-				psDec.Pitch_contour_iCDF = &silk_pitch_contour_iCDF[0]
+				psDec.Pitch_contour_iCDF = silk_pitch_contour_iCDF[:][:]
 			} else {
-				psDec.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_iCDF[0]
+				psDec.Pitch_contour_iCDF = silk_pitch_contour_10_ms_iCDF[:][:]
 			}
 		}
 		if psDec.Fs_kHz != fs_kHz {
@@ -37,11 +37,11 @@ func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int, fs_API_Hz int32)
 				psDec.PsNLSF_CB = &silk_NLSF_CB_WB
 			}
 			if fs_kHz == 16 {
-				psDec.Pitch_lag_low_bits_iCDF = &silk_uniform8_iCDF[0]
+				psDec.Pitch_lag_low_bits_iCDF = silk_uniform8_iCDF[:][:]
 			} else if fs_kHz == 12 {
-				psDec.Pitch_lag_low_bits_iCDF = &silk_uniform6_iCDF[0]
+				psDec.Pitch_lag_low_bits_iCDF = silk_uniform6_iCDF[:][:]
 			} else if fs_kHz == 8 {
-				psDec.Pitch_lag_low_bits_iCDF = &silk_uniform4_iCDF[0]
+				psDec.Pitch_lag_low_bits_iCDF = silk_uniform4_iCDF[:][:]
 			} else {
 			}
 			psDec.First_frame_after_reset = 1

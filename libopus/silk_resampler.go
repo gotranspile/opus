@@ -43,27 +43,27 @@ func silk_resampler_init(S *silk_resampler_state_struct, Fs_Hz_in int32, Fs_Hz_o
 		if (int(Fs_Hz_out) * 4) == (int(Fs_Hz_in) * 3) {
 			S.FIR_Fracs = 3
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR0
-			S.Coefs = &silk_Resampler_3_4_COEFS[0]
+			S.Coefs = silk_Resampler_3_4_COEFS[:][:]
 		} else if (int(Fs_Hz_out) * 3) == (int(Fs_Hz_in) * 2) {
 			S.FIR_Fracs = 2
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR0
-			S.Coefs = &silk_Resampler_2_3_COEFS[0]
+			S.Coefs = silk_Resampler_2_3_COEFS[:][:]
 		} else if (int(Fs_Hz_out) * 2) == int(Fs_Hz_in) {
 			S.FIR_Fracs = 1
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR1
-			S.Coefs = &silk_Resampler_1_2_COEFS[0]
+			S.Coefs = silk_Resampler_1_2_COEFS[:][:]
 		} else if (int(Fs_Hz_out) * 3) == int(Fs_Hz_in) {
 			S.FIR_Fracs = 1
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR2
-			S.Coefs = &silk_Resampler_1_3_COEFS[0]
+			S.Coefs = silk_Resampler_1_3_COEFS[:][:]
 		} else if (int(Fs_Hz_out) * 4) == int(Fs_Hz_in) {
 			S.FIR_Fracs = 1
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR2
-			S.Coefs = &silk_Resampler_1_4_COEFS[0]
+			S.Coefs = silk_Resampler_1_4_COEFS[:][:]
 		} else if (int(Fs_Hz_out) * 6) == int(Fs_Hz_in) {
 			S.FIR_Fracs = 1
 			S.FIR_Order = RESAMPLER_DOWN_ORDER_FIR2
-			S.Coefs = &silk_Resampler_1_6_COEFS[0]
+			S.Coefs = silk_Resampler_1_6_COEFS[:][:]
 		} else {
 			return -1
 		}

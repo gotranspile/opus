@@ -94,9 +94,9 @@ func silk_setup_fs(psEnc *silk_encoder_state_FLP, fs_kHz int, PacketSize_ms int)
 			psEnc.SCmn.Frame_length = int(int32(int16(PacketSize_ms))) * int(int32(int16(fs_kHz)))
 			psEnc.SCmn.Pitch_LPC_win_length = int(int32(int16((int(LA_PITCH_MS<<1))+10))) * int(int32(int16(fs_kHz)))
 			if psEnc.SCmn.Fs_kHz == 8 {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_NB_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_10_ms_NB_iCDF[:][:]
 			} else {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_10_ms_iCDF[:][:]
 			}
 		} else {
 			psEnc.SCmn.NFramesPerPacket = int(int32(PacketSize_ms / (int(SUB_FRAME_LENGTH_MS * MAX_NB_SUBFR))))
@@ -104,9 +104,9 @@ func silk_setup_fs(psEnc *silk_encoder_state_FLP, fs_kHz int, PacketSize_ms int)
 			psEnc.SCmn.Frame_length = int(int32(int16(fs_kHz))) * 20
 			psEnc.SCmn.Pitch_LPC_win_length = int(int32(int16((int(LA_PITCH_MS<<1))+20))) * int(int32(int16(fs_kHz)))
 			if psEnc.SCmn.Fs_kHz == 8 {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_NB_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_NB_iCDF[:][:]
 			} else {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_iCDF[:][:]
 			}
 		}
 		psEnc.SCmn.PacketSize_ms = PacketSize_ms
@@ -129,15 +129,15 @@ func silk_setup_fs(psEnc *silk_encoder_state_FLP, fs_kHz int, PacketSize_ms int)
 		psEnc.SCmn.Fs_kHz = fs_kHz
 		if psEnc.SCmn.Fs_kHz == 8 {
 			if psEnc.SCmn.Nb_subfr == MAX_NB_SUBFR {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_NB_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_NB_iCDF[:][:]
 			} else {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_NB_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_10_ms_NB_iCDF[:][:]
 			}
 		} else {
 			if psEnc.SCmn.Nb_subfr == MAX_NB_SUBFR {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_iCDF[:][:]
 			} else {
-				psEnc.SCmn.Pitch_contour_iCDF = &silk_pitch_contour_10_ms_iCDF[0]
+				psEnc.SCmn.Pitch_contour_iCDF = silk_pitch_contour_10_ms_iCDF[:][:]
 			}
 		}
 		if psEnc.SCmn.Fs_kHz == 8 || psEnc.SCmn.Fs_kHz == 12 {
@@ -158,11 +158,11 @@ func silk_setup_fs(psEnc *silk_encoder_state_FLP, fs_kHz int, PacketSize_ms int)
 			psEnc.SCmn.Pitch_LPC_win_length = int(int32(int16((int(LA_PITCH_MS<<1))+10))) * int(int32(int16(fs_kHz)))
 		}
 		if psEnc.SCmn.Fs_kHz == 16 {
-			psEnc.SCmn.Pitch_lag_low_bits_iCDF = &silk_uniform8_iCDF[0]
+			psEnc.SCmn.Pitch_lag_low_bits_iCDF = silk_uniform8_iCDF[:][:]
 		} else if psEnc.SCmn.Fs_kHz == 12 {
-			psEnc.SCmn.Pitch_lag_low_bits_iCDF = &silk_uniform6_iCDF[0]
+			psEnc.SCmn.Pitch_lag_low_bits_iCDF = silk_uniform6_iCDF[:][:]
 		} else {
-			psEnc.SCmn.Pitch_lag_low_bits_iCDF = &silk_uniform4_iCDF[0]
+			psEnc.SCmn.Pitch_lag_low_bits_iCDF = silk_uniform4_iCDF[:][:]
 		}
 	}
 	return ret

@@ -28,17 +28,17 @@ func silk_NLSF_encode(NLSFIndices *int8, pNLSF_Q15 *int16, psNLSF_CB *silk_NLSF_
 		iCDF_ptr     *uint8
 		pCB_Wght_Q9  *int16
 	)
-	silk_NLSF_stabilize(pNLSF_Q15, psNLSF_CB.DeltaMin_Q15, int(psNLSF_CB.Order))
+	silk_NLSF_stabilize(pNLSF_Q15, &psNLSF_CB.DeltaMin_Q15[0], int(psNLSF_CB.Order))
 	err_Q24 = (*int32)(libc.Malloc(int(uintptr(psNLSF_CB.NVectors) * unsafe.Sizeof(int32(0)))))
-	silk_NLSF_VQ([]int32(err_Q24), []int16(pNLSF_Q15), []uint8(psNLSF_CB.CB1_NLSF_Q8), []int16(psNLSF_CB.CB1_Wght_Q9), int(psNLSF_CB.NVectors), int(psNLSF_CB.Order))
+	silk_NLSF_VQ([]int32(err_Q24), []int16(pNLSF_Q15), []uint8(psNLSF_CB.CB1_NLSF_Q8), psNLSF_CB.CB1_Wght_Q9, int(psNLSF_CB.NVectors), int(psNLSF_CB.Order))
 	tempIndices1 = (*int)(libc.Malloc(nSurvivors * int(unsafe.Sizeof(int(0)))))
 	silk_insertion_sort_increasing(err_Q24, tempIndices1, int(psNLSF_CB.NVectors), nSurvivors)
 	RD_Q25 = (*int32)(libc.Malloc(nSurvivors * int(unsafe.Sizeof(int32(0)))))
 	tempIndices2 = (*int8)(libc.Malloc((nSurvivors * MAX_LPC_ORDER) * int(unsafe.Sizeof(int8(0)))))
 	for s = 0; s < nSurvivors; s++ {
 		ind1 = *(*int)(unsafe.Add(unsafe.Pointer(tempIndices1), unsafe.Sizeof(int(0))*uintptr(s)))
-		pCB_element = (*uint8)(unsafe.Add(unsafe.Pointer(psNLSF_CB.CB1_NLSF_Q8), ind1*int(psNLSF_CB.Order)))
-		pCB_Wght_Q9 = (*int16)(unsafe.Add(unsafe.Pointer(psNLSF_CB.CB1_Wght_Q9), unsafe.Sizeof(int16(0))*uintptr(ind1*int(psNLSF_CB.Order))))
+		pCB_element = (*uint8)(unsafe.Pointer(&psNLSF_CB.CB1_NLSF_Q8[ind1*int(psNLSF_CB.Order)]))
+		pCB_Wght_Q9 = &psNLSF_CB.CB1_Wght_Q9[ind1*int(psNLSF_CB.Order)]
 		for i = 0; i < int(psNLSF_CB.Order); i++ {
 			NLSF_tmp_Q15[i] = int16(int(uint16(int16(*(*uint8)(unsafe.Add(unsafe.Pointer(pCB_element), i))))) << 7)
 			W_tmp_Q9 = int32(*(*int16)(unsafe.Add(unsafe.Pointer(pCB_Wght_Q9), unsafe.Sizeof(int16(0))*uintptr(i))))
@@ -47,7 +47,7 @@ func silk_NLSF_encode(NLSFIndices *int8, pNLSF_Q15 *int16, psNLSF_CB *silk_NLSF_
 		}
 		silk_NLSF_unpack(ec_ix[:], pred_Q8[:], psNLSF_CB, ind1)
 		*(*int32)(unsafe.Add(unsafe.Pointer(RD_Q25), unsafe.Sizeof(int32(0))*uintptr(s))) = silk_NLSF_del_dec_quant([]int8((*int8)(unsafe.Add(unsafe.Pointer(tempIndices2), s*MAX_LPC_ORDER))), res_Q10[:], W_adj_Q5[:], pred_Q8[:], ec_ix[:], []uint8(psNLSF_CB.Ec_Rates_Q5), int(psNLSF_CB.QuantStepSize_Q16), psNLSF_CB.InvQuantStepSize_Q6, int32(NLSF_mu_Q20), psNLSF_CB.Order)
-		iCDF_ptr = (*uint8)(unsafe.Add(unsafe.Pointer(psNLSF_CB.CB1_iCDF), (signalType>>1)*int(psNLSF_CB.NVectors)))
+		iCDF_ptr = (*uint8)(unsafe.Pointer(&psNLSF_CB.CB1_iCDF[(signalType>>1)*int(psNLSF_CB.NVectors)]))
 		if ind1 == 0 {
 			prob_Q8 = 256 - int(*(*uint8)(unsafe.Add(unsafe.Pointer(iCDF_ptr), ind1)))
 		} else {

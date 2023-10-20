@@ -174,7 +174,7 @@ func silk_resampler_private_down_FIR(SS unsafe.Pointer, out []int16, in []int16,
 	)
 	buf = (*int32)(libc.Malloc((S.BatchSize + S.FIR_Order) * int(unsafe.Sizeof(int32(0)))))
 	libc.MemCpy(unsafe.Pointer(buf), unsafe.Pointer(&S.SFIR.I32[0]), S.FIR_Order*int(unsafe.Sizeof(int32(0))))
-	FIR_Coefs = (*int16)(unsafe.Add(unsafe.Pointer(S.Coefs), unsafe.Sizeof(int16(0))*2))
+	FIR_Coefs = &S.Coefs[2]
 	index_increment_Q16 = S.InvRatio_Q16
 	for {
 		if int(inLen) < S.BatchSize {
@@ -182,7 +182,7 @@ func silk_resampler_private_down_FIR(SS unsafe.Pointer, out []int16, in []int16,
 		} else {
 			nSamplesIn = int32(S.BatchSize)
 		}
-		silk_resampler_private_AR2(S.SIIR[:], []int32((*int32)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int32(0))*uintptr(S.FIR_Order)))), in, []int16(S.Coefs), nSamplesIn)
+		silk_resampler_private_AR2(S.SIIR[:], []int32((*int32)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int32(0))*uintptr(S.FIR_Order)))), in, S.Coefs, nSamplesIn)
 		max_index_Q16 = int32(int(uint32(nSamplesIn)) << 16)
 		out = []int16(silk_resampler_private_down_FIR_INTERPOL(&out[0], buf, FIR_Coefs, S.FIR_Order, S.FIR_Fracs, max_index_Q16, index_increment_Q16))
 		in += []int16(nSamplesIn)
