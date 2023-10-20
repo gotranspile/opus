@@ -233,6 +233,8 @@ files:
     disabled: true # DONE
   - name: silk/stereo_decode_pred.c
     disabled: true # DONE
+  - name: silk/decode_indices.c
+    disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
