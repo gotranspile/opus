@@ -235,6 +235,8 @@ files:
     disabled: true # DONE
   - name: silk/decode_indices.c
     disabled: true # DONE
+  - name: silk/code_signs.c
+    disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
