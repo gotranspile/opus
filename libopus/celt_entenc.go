@@ -11,23 +11,23 @@ func ec_write_byte(_this *ec_enc, _value uint) int {
 	if int(_this.Offs)+int(_this.End_offs) >= int(_this.Storage) {
 		return -1
 	}
-	*(*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), func() uint32 {
+	_this.Buf[func() uint32 {
 		p := &_this.Offs
 		x := *p
 		*p++
 		return x
-	}())) = uint8(_value)
+	}()] = byte(uint8(_value))
 	return 0
 }
 func ec_write_byte_at_end(_this *ec_enc, _value uint) int {
 	if int(_this.Offs)+int(_this.End_offs) >= int(_this.Storage) {
 		return -1
 	}
-	*(*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), int(_this.Storage)-int(func() uint32 {
+	_this.Buf[int(_this.Storage)-int(func() uint32 {
 		p := &_this.End_offs
 		*p++
 		return *p
-	}()))) = uint8(_value)
+	}())] = byte(uint8(_value))
 	return 0
 }
 func ec_enc_carry_out(_this *ec_enc, _c int) {
@@ -65,7 +65,7 @@ func ec_enc_normalize(_this *ec_enc) {
 	}
 }
 func ec_enc_init(_this *ec_enc, _buf *uint8, _size uint32) {
-	_this.Buf = _buf
+	_this.Buf = []byte(_buf)
 	_this.End_offs = 0
 	_this.End_window = 0
 	_this.Nend_bits = 0
@@ -180,7 +180,7 @@ func ec_enc_patch_initial_bits(_this *ec_enc, _val uint, _nbits uint) {
 	shift = int(8 - _nbits)
 	mask = ((1 << _nbits) - 1) << uint(shift)
 	if int(_this.Offs) > 0 {
-		*_this.Buf = uint8((uint(*_this.Buf) & ^mask) | _val<<uint(shift))
+		_this.Buf[0] = byte(uint8((uint(_this.Buf[0]) & ^mask) | _val<<uint(shift)))
 	} else if _this.Rem >= 0 {
 		_this.Rem = (_this.Rem & int(^mask)) | int(_val<<uint(shift))
 	} else if uint(_this.Rng) <= ((1 << (32 - 1)) >> _nbits) {
@@ -190,7 +190,7 @@ func ec_enc_patch_initial_bits(_this *ec_enc, _val uint, _nbits uint) {
 	}
 }
 func ec_enc_shrink(_this *ec_enc, _size uint32) {
-	libc.MemMove(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), _size))), -int(_this.End_offs)))), unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), _this.Storage))), -int(_this.End_offs)))), int(uintptr(_this.End_offs)*unsafe.Sizeof(uint8(0))+uintptr((int64(uintptr(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), _size))), -int(_this.End_offs)))))-uintptr(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), _this.Storage))), -int(_this.End_offs)))))))*0)))
+	libc.MemMove(unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer(&_this.Buf[_size]), -int(_this.End_offs)))), unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer(&_this.Buf[_this.Storage]), -int(_this.End_offs)))), int(uintptr(_this.End_offs)*unsafe.Sizeof(byte(0))+uintptr((int64(uintptr(unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer(&_this.Buf[_size]), -int(_this.End_offs)))))-uintptr(unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer(&_this.Buf[_this.Storage]), -int(_this.End_offs)))))))*0)))
 	_this.Storage = _size
 }
 func ec_enc_done(_this *ec_enc) {
@@ -225,7 +225,7 @@ func ec_enc_done(_this *ec_enc) {
 		used -= 8
 	}
 	if _this.Error == 0 {
-		libc.MemSet(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), _this.Offs))), 0, (int(_this.Storage)-int(_this.Offs)-int(_this.End_offs))*int(unsafe.Sizeof(uint8(0))))
+		libc.MemSet(unsafe.Pointer(&_this.Buf[_this.Offs]), 0, (int(_this.Storage)-int(_this.Offs)-int(_this.End_offs))*int(unsafe.Sizeof(byte(0))))
 		if used > 0 {
 			if int(_this.End_offs) >= int(_this.Storage) {
 				_this.Error = -1
@@ -235,7 +235,7 @@ func ec_enc_done(_this *ec_enc) {
 					window &= ec_window(int32((1 << l) - 1))
 					_this.Error = -1
 				}
-				*(*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), int(_this.Storage)-int(_this.End_offs)-1)) |= uint8(window)
+				_this.Buf[int(_this.Storage)-int(_this.End_offs)-1] |= byte(uint8(window))
 			}
 		}
 	}

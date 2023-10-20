@@ -59,7 +59,7 @@ func silk_decode_signs(psRangeDec *ec_dec, pulses []int16, length int, signalTyp
 			}()))
 			for j = 0; j < SHELL_CODEC_FRAME_LENGTH; j++ {
 				if int(*(*int16)(unsafe.Add(unsafe.Pointer(q_ptr), unsafe.Sizeof(int16(0))*uintptr(j)))) > 0 {
-					*(*int16)(unsafe.Add(unsafe.Pointer(q_ptr), unsafe.Sizeof(int16(0))*uintptr(j))) *= int16(int(int32(int(uint32(int32(ec_dec_icdf(psRangeDec, &icdf[0], 8))))<<1)) - 1)
+					*(*int16)(unsafe.Add(unsafe.Pointer(q_ptr), unsafe.Sizeof(int16(0))*uintptr(j))) *= int16(int(int32(int(uint32(int32(ec_dec_icdf(psRangeDec, icdf[:], 8))))<<1)) - 1)
 				}
 			}
 		}

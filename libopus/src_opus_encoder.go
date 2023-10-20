@@ -706,7 +706,7 @@ func compute_equiv_rate(bitrate int32, channels int, frame_rate int, vbr int, mo
 	}
 	return equiv
 }
-func is_digital_silence(pcm *opus_val16, frame_size int, channels int, lsb_depth int) int {
+func is_digital_silence(pcm []opus_val16, frame_size int, channels int, lsb_depth int) int {
 	var (
 		silence    int        = 0
 		sample_max opus_val32 = 0
@@ -715,7 +715,7 @@ func is_digital_silence(pcm *opus_val16, frame_size int, channels int, lsb_depth
 	silence = int(libc.BoolToInt(sample_max <= opus_val32(1/float32(1<<lsb_depth))))
 	return silence
 }
-func compute_frame_energy(pcm *opus_val16, frame_size int, channels int, arch int) opus_val32 {
+func compute_frame_energy(pcm []opus_val16, frame_size int, channels int, arch int) opus_val32 {
 	var len_ int = frame_size * channels
 	return opus_val32(float32(func() opus_val32 {
 		_ = arch
@@ -794,7 +794,7 @@ func encode_multiframe_packet(st *OpusEncoder, pcm *opus_val16, nb_frames int, f
 		if to_celt != 0 && i == nb_frames-1 {
 			st.User_forced_mode = MODE_CELT_ONLY
 		}
-		tmp_len = int(opus_encode_native(st, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i*(st.Channels*frame_size)))), frame_size, (*uint8)(unsafe.Add(unsafe.Pointer(tmp_data), i*int(bytes_per_frame))), bytes_per_frame, lsb_depth, nil, 0, 0, 0, 0, nil, float_api))
+		tmp_len = int(opus_encode_native(st, []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i*(st.Channels*frame_size))))), frame_size, []byte((*uint8)(unsafe.Add(unsafe.Pointer(tmp_data), i*int(bytes_per_frame)))), bytes_per_frame, lsb_depth, nil, 0, 0, 0, 0, nil, float_api))
 		if tmp_len < 0 {
 			return -3
 		}
@@ -843,7 +843,7 @@ func compute_redundancy_bytes(max_data_bytes int32, bitrate_bps int32, frame_rat
 	}
 	return redundancy_bytes
 }
-func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *uint8, out_data_bytes int32, lsb_depth int, analysis_pcm unsafe.Pointer, analysis_size int32, c1 int, c2 int, analysis_channels int, downmix downmix_func, float_api int) int32 {
+func opus_encode_native(st *OpusEncoder, pcm []opus_val16, frame_size int, data []byte, out_data_bytes int32, lsb_depth int, analysis_pcm unsafe.Pointer, analysis_size int32, c1 int, c2 int, analysis_channels int, downmix downmix_func, float_api int) int32 {
 	var (
 		silk_enc                   unsafe.Pointer
 		celt_enc                   *OpusCustomEncoder
@@ -962,7 +962,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 		}
 	}
 	if st.Channels == 2 && st.Force_channels != 1 {
-		stereo_width = compute_stereo_width(pcm, frame_size, st.Fs, &st.Width_mem)
+		stereo_width = compute_stereo_width(&pcm[0], frame_size, st.Fs, &st.Width_mem)
 	} else {
 		stereo_width = 0
 	}
@@ -1030,8 +1030,8 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 		} else if tocmode == MODE_HYBRID && bw <= OPUS_BANDWIDTH_SUPERWIDEBAND {
 			bw = OPUS_BANDWIDTH_SUPERWIDEBAND
 		}
-		*data = gen_toc(tocmode, frame_rate, bw, st.Stream_channels)
-		*data |= uint8(int8(packet_code))
+		data[0] = byte(gen_toc(tocmode, frame_rate, bw, st.Stream_channels))
+		data[0] |= byte(int8(packet_code))
 		if packet_code <= 1 {
 			ret = 1
 		} else {
@@ -1043,10 +1043,10 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 			max_data_bytes = int32(ret)
 		}
 		if packet_code == 3 {
-			*(*uint8)(unsafe.Add(unsafe.Pointer(data), 1)) = uint8(int8(num_multiframes))
+			data[1] = byte(int8(num_multiframes))
 		}
 		if st.Use_vbr == 0 {
-			ret = opus_packet_pad(data, int32(ret), max_data_bytes)
+			ret = opus_packet_pad((*uint8)(unsafe.Pointer(&data[0])), int32(ret), max_data_bytes)
 			if ret == OPUS_OK {
 				ret = int(max_data_bytes)
 			} else {
@@ -1312,7 +1312,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 			st.Analysis.Read_pos = analysis_read_pos_bak
 			st.Analysis.Read_subframe = analysis_read_subframe_bak
 		}
-		ret = int(encode_multiframe_packet(st, pcm, nb_frames, enc_frame_size, data, out_data_bytes, to_celt, lsb_depth, float_api))
+		ret = int(encode_multiframe_packet(st, &pcm[0], nb_frames, enc_frame_size, (*uint8)(unsafe.Pointer(&data[0])), out_data_bytes, to_celt, lsb_depth, float_api))
 		return int32(ret)
 	}
 	if st.Silk_bw_switch != 0 {
@@ -1336,8 +1336,8 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 		}
 		return int(st.Bitrate_bps) * frame_size / (int(st.Fs) * 8)
 	}()) - 1
-	data = (*uint8)(unsafe.Add(unsafe.Pointer(data), 1))
-	ec_enc_init(&enc, data, uint32(int32(int(max_data_bytes)-1)))
+	data += []byte(1)
+	ec_enc_init(&enc, (*uint8)(unsafe.Pointer(&data[0])), uint32(int32(int(max_data_bytes)-1)))
 	pcm_buf = (*opus_val16)(libc.Malloc(((total_buffer + frame_size) * st.Channels) * int(unsafe.Sizeof(opus_val16(0)))))
 	libc.MemCpy(unsafe.Pointer(pcm_buf), unsafe.Pointer(&st.Delay_buffer[(st.Encoder_buffer-total_buffer)*st.Channels]), (total_buffer*st.Channels)*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer(pcm_buf))-uintptr(unsafe.Pointer(&st.Delay_buffer[(st.Encoder_buffer-total_buffer)*st.Channels]))))*0))
 	if st.Mode == MODE_CELT_ONLY {
@@ -1348,15 +1348,15 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 	st.Variable_HP_smth2_Q15 = int32(int(st.Variable_HP_smth2_Q15) + (((hp_freq_smth1 - int(st.Variable_HP_smth2_Q15)) * int(int64(int16(int32(math.Floor(VARIABLE_HP_SMTH_COEF2*(1<<16)+0.5)))))) >> 16))
 	cutoff_Hz = int(silk_log2lin(int32(int(st.Variable_HP_smth2_Q15) >> 8)))
 	if st.Application == OPUS_APPLICATION_VOIP {
-		hp_cutoff(pcm, int32(cutoff_Hz), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), &st.Hp_mem[0], frame_size, st.Channels, st.Fs, st.Arch)
+		hp_cutoff(&pcm[0], int32(cutoff_Hz), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), &st.Hp_mem[0], frame_size, st.Channels, st.Fs, st.Arch)
 	} else {
-		dc_reject(pcm, 3, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), &st.Hp_mem[0], frame_size, st.Channels, st.Fs)
+		dc_reject(&pcm[0], 3, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), &st.Hp_mem[0], frame_size, st.Channels, st.Fs)
 	}
 	if float_api != 0 {
 		var sum opus_val32
 		sum = func() opus_val32 {
 			st.Arch
-			return celt_inner_prod_c((*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels))), frame_size*st.Channels)
+			return celt_inner_prod_c([]opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels)))), []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels)))), frame_size*st.Channels)
 		}()
 		if sum >= opus_val32(1e+09) || sum != sum {
 			libc.MemSet(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels)))), 0, (frame_size*st.Channels)*int(unsafe.Sizeof(opus_val16(0))))
@@ -1540,7 +1540,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 		st.Silk_mode.OpusCanSwitch = int(libc.BoolToInt(st.Silk_mode.SwitchReady != 0 && st.Nonfinal_frame == 0))
 		if int(nBytes) == 0 {
 			st.RangeFinal = 0
-			*(*uint8)(unsafe.Add(unsafe.Pointer(data), -1)) = gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels)
+			data[-1] = byte(gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels))
 			return 1
 		}
 		if st.Silk_mode.OpusCanSwitch != 0 {
@@ -1729,7 +1729,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 			int(-1) == 0
 			return int32(-1)
 		}())
-		err = celt_encode_with_ec(celt_enc, pcm_buf, int(st.Fs)/200, (*uint8)(unsafe.Add(unsafe.Pointer(data), nb_compr_bytes)), redundancy_bytes, nil)
+		err = celt_encode_with_ec(celt_enc, pcm_buf, int(st.Fs)/200, (*uint8)(unsafe.Pointer(&data[nb_compr_bytes])), redundancy_bytes, nil)
 		if err < 0 {
 			return -3
 		}
@@ -1766,7 +1766,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 				return -3
 			}
 			if redundancy != 0 && celt_to_silk != 0 && st.Mode == MODE_HYBRID && st.Use_vbr != 0 {
-				libc.MemMove(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(data), ret))), unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(data), nb_compr_bytes))), redundancy_bytes*int(unsafe.Sizeof(uint8(0)))+int((int64(uintptr(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(data), ret))))-uintptr(unsafe.Pointer((*uint8)(unsafe.Add(unsafe.Pointer(data), nb_compr_bytes))))))*0))
+				libc.MemMove(unsafe.Pointer(&data[ret]), unsafe.Pointer(&data[nb_compr_bytes]), redundancy_bytes*int(unsafe.Sizeof(byte(0)))+int((int64(uintptr(unsafe.Pointer(&data[ret]))-uintptr(unsafe.Pointer(&data[nb_compr_bytes]))))*0))
 				nb_compr_bytes = nb_compr_bytes + redundancy_bytes
 			}
 		}
@@ -1802,14 +1802,14 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 			ec_enc_shrink(&enc, uint32(int32(nb_compr_bytes)))
 		}
 		celt_encode_with_ec(celt_enc, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*(frame_size-N2-N4)))), N4, &dummy[0], 2, nil)
-		err = celt_encode_with_ec(celt_enc, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*(frame_size-N2)))), N2, (*uint8)(unsafe.Add(unsafe.Pointer(data), nb_compr_bytes)), redundancy_bytes, nil)
+		err = celt_encode_with_ec(celt_enc, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*(frame_size-N2)))), N2, (*uint8)(unsafe.Pointer(&data[nb_compr_bytes])), redundancy_bytes, nil)
 		if err < 0 {
 			return -3
 		}
 		opus_custom_encoder_ctl(celt_enc, OPUS_GET_FINAL_RANGE_REQUEST, (*uint32)(unsafe.Add(unsafe.Pointer(&redundant_rng), unsafe.Sizeof(uint32(0))*uintptr(int64(uintptr(unsafe.Pointer(&redundant_rng))-uintptr(unsafe.Pointer(&redundant_rng)))))))
 	}
-	data = (*uint8)(unsafe.Add(unsafe.Pointer(data), -1))
-	*data = gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels)
+	data--
+	data[0] = byte(gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels))
 	st.RangeFinal = uint32(int32(int(enc.Rng) ^ int(redundant_rng)))
 	if to_celt != 0 {
 		st.Prev_mode = MODE_CELT_ONLY
@@ -1822,7 +1822,7 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 	if st.Use_dtx != 0 && (analysis_info.Valid != 0 || is_silence != 0) {
 		if decide_dtx_mode(activity, &st.Nb_no_activity_ms_Q1, frame_size*(2*1000)/int(st.Fs)) != 0 {
 			st.RangeFinal = 0
-			*data = gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels)
+			data[0] = byte(gen_toc(st.Mode, int(st.Fs)/frame_size, curr_bandwidth, st.Stream_channels))
 			return 1
 		}
 	} else {
@@ -1832,17 +1832,17 @@ func opus_encode_native(st *OpusEncoder, pcm *opus_val16, frame_size int, data *
 		if int(max_data_bytes) < 2 {
 			return -2
 		}
-		*(*uint8)(unsafe.Add(unsafe.Pointer(data), 1)) = 0
+		data[1] = 0
 		ret = 1
 		st.RangeFinal = 0
 	} else if st.Mode == MODE_SILK_ONLY && redundancy == 0 {
-		for ret > 2 && int(*(*uint8)(unsafe.Add(unsafe.Pointer(data), ret))) == 0 {
+		for ret > 2 && data[ret] == 0 {
 			ret--
 		}
 	}
 	ret += redundancy_bytes + 1
 	if st.Use_vbr == 0 {
-		if opus_packet_pad(data, int32(ret), max_data_bytes) != OPUS_OK {
+		if opus_packet_pad((*uint8)(unsafe.Pointer(&data[0])), int32(ret), max_data_bytes) != OPUS_OK {
 			return -3
 		}
 		ret = int(max_data_bytes)
@@ -1864,7 +1864,7 @@ func opus_encode(st *OpusEncoder, pcm *int16, analysis_frame_size int, data *uin
 	for i = 0; i < frame_size*st.Channels; i++ {
 		*(*float32)(unsafe.Add(unsafe.Pointer(in), unsafe.Sizeof(float32(0))*uintptr(i))) = float32(float64(*(*int16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(int16(0))*uintptr(i)))) * (1.0 / 32768))
 	}
-	ret = int(opus_encode_native(st, (*opus_val16)(unsafe.Pointer(in)), frame_size, data, max_data_bytes, 16, unsafe.Pointer(pcm), int32(analysis_frame_size), 0, -2, st.Channels, func(arg1 unsafe.Pointer, arg2 *opus_val32, arg3 int, arg4 int, arg5 int, arg6 int, arg7 int) {
+	ret = int(opus_encode_native(st, []opus_val16(in), frame_size, []byte(data), max_data_bytes, 16, unsafe.Pointer(pcm), int32(analysis_frame_size), 0, -2, st.Channels, func(arg1 unsafe.Pointer, arg2 *opus_val32, arg3 int, arg4 int, arg5 int, arg6 int, arg7 int) {
 		downmix_int(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}, 0))
 	return int32(ret)
@@ -1872,7 +1872,7 @@ func opus_encode(st *OpusEncoder, pcm *int16, analysis_frame_size int, data *uin
 func opus_encode_float(st *OpusEncoder, pcm *float32, analysis_frame_size int, data *uint8, out_data_bytes int32) int32 {
 	var frame_size int
 	frame_size = int(frame_size_select(int32(analysis_frame_size), st.Variable_duration, st.Fs))
-	return opus_encode_native(st, (*opus_val16)(unsafe.Pointer(pcm)), frame_size, data, out_data_bytes, 24, unsafe.Pointer(pcm), int32(analysis_frame_size), 0, -2, st.Channels, func(arg1 unsafe.Pointer, arg2 *opus_val32, arg3 int, arg4 int, arg5 int, arg6 int, arg7 int) {
+	return opus_encode_native(st, []opus_val16(pcm), frame_size, []byte(data), out_data_bytes, 24, unsafe.Pointer(pcm), int32(analysis_frame_size), 0, -2, st.Channels, func(arg1 unsafe.Pointer, arg2 *opus_val32, arg3 int, arg4 int, arg5 int, arg6 int, arg7 int) {
 		downmix_float(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}, 1)
 }

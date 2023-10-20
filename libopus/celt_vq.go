@@ -325,7 +325,7 @@ func renormalise_vector(X *celt_norm, N int, gain opus_val16, arch int) {
 	)
 	E = EPSILON + (func() opus_val32 {
 		_ = arch
-		return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(X)), (*opus_val16)(unsafe.Pointer(X)), N)
+		return celt_inner_prod_c([]opus_val16(X), []opus_val16(X), N)
 	}())
 	t = E
 	g = opus_val16((1.0 / (float32(math.Sqrt(float64(t))))) * float32(gain))
@@ -362,11 +362,11 @@ func stereo_itheta(X *celt_norm, Y *celt_norm, stereo int, N int, arch int) int 
 	} else {
 		Emid += func() opus_val32 {
 			_ = arch
-			return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(X)), (*opus_val16)(unsafe.Pointer(X)), N)
+			return celt_inner_prod_c([]opus_val16(X), []opus_val16(X), N)
 		}()
 		Eside += func() opus_val32 {
 			_ = arch
-			return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(Y)), (*opus_val16)(unsafe.Pointer(Y)), N)
+			return celt_inner_prod_c([]opus_val16(Y), []opus_val16(Y), N)
 		}()
 	}
 	mid = opus_val16(float32(math.Sqrt(float64(Emid))))

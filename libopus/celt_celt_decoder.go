@@ -713,7 +713,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int, pcm *opus
 			postfilter_pitch = (16 << octave) + int(ec_dec_bits(dec, uint(octave+4))) - 1
 			qg = int(ec_dec_bits(dec, 3))
 			if ec_tell((*ec_ctx)(unsafe.Pointer(dec)))+2 <= int(total_bits) {
-				postfilter_tapset = ec_dec_icdf(dec, &tapset_icdf[0], 2)
+				postfilter_tapset = ec_dec_icdf(dec, tapset_icdf[:], 2)
 			}
 			postfilter_gain = opus_val16(float64(qg+1) * 0.09375)
 		}
@@ -741,7 +741,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int, pcm *opus
 	tell = int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
 	spread_decision = 2
 	if int(tell)+4 <= int(total_bits) {
-		spread_decision = ec_dec_icdf(dec, &spread_icdf[0], 5)
+		spread_decision = ec_dec_icdf(dec, spread_icdf[:], 5)
 	}
 	cap_ = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	init_caps(mode, cap_, LM, C)
@@ -793,7 +793,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int, pcm *opus
 	}
 	fine_quant = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	if int(tell)+(int(6<<BITRES)) <= int(total_bits) {
-		alloc_trim = ec_dec_icdf(dec, &trim_icdf[0], 7)
+		alloc_trim = ec_dec_icdf(dec, trim_icdf[:], 7)
 	} else {
 		alloc_trim = 5
 	}

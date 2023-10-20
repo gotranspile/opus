@@ -59,7 +59,7 @@ func celt_fir_c(x *opus_val16, num *opus_val16, y *opus_val16, N int, ord int, a
 		sum[2] = opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i+2))))
 		sum[3] = opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i+3))))
 		_ = arch
-		xcorr_kernel_c(rnum, (*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(ord)))), sum, ord)
+		xcorr_kernel_c([]opus_val16(rnum), []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(ord))))), sum, ord)
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(sum[0])
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+1))) = opus_val16(sum[1])
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+2))) = opus_val16(sum[2])
@@ -98,7 +98,7 @@ func celt_iir(_x *opus_val32, den *opus_val16, _y *opus_val32, N int, ord int, m
 		sum[2] = *(*opus_val32)(unsafe.Add(unsafe.Pointer(_x), unsafe.Sizeof(opus_val32(0))*uintptr(i+2)))
 		sum[3] = *(*opus_val32)(unsafe.Add(unsafe.Pointer(_x), unsafe.Sizeof(opus_val32(0))*uintptr(i+3)))
 		_ = arch
-		xcorr_kernel_c(rden, (*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))), sum, ord)
+		xcorr_kernel_c([]opus_val16(rden), []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i)))), sum, ord)
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+ord))) = opus_val16(-(sum[0]))
 		*(*opus_val32)(unsafe.Add(unsafe.Pointer(_y), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = sum[0]
 		sum[1] = (sum[1]) + opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+ord))))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(den), unsafe.Sizeof(opus_val16(0))*0)))

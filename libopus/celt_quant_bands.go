@@ -228,7 +228,7 @@ func quant_coarse_energy(m *OpusCustomMode, start int, end int, effEnd int, eBan
 		enc_intra_state = *enc
 		nstart_bytes = ec_range_bytes((*ec_ctx)(unsafe.Pointer(&enc_start_state)))
 		nintra_bytes = ec_range_bytes((*ec_ctx)(unsafe.Pointer(&enc_intra_state)))
-		intra_buf = (*uint8)(unsafe.Add(unsafe.Pointer(ec_get_buffer((*ec_ctx)(unsafe.Pointer(&enc_intra_state)))), nstart_bytes))
+		intra_buf = (*uint8)(unsafe.Pointer(&ec_get_buffer((*ec_ctx)(unsafe.Pointer(&enc_intra_state)))[nstart_bytes]))
 		save_bytes = uint32(int32(int(nintra_bytes) - int(nstart_bytes)))
 		if int(save_bytes) == 0 {
 			save_bytes = ALLOC_NONE
@@ -372,7 +372,7 @@ func unquant_coarse_energy(m *OpusCustomMode, start int, end int, oldEBands *opu
 					}()) * 2
 					qi = ec_laplace_decode(dec, uint(int(*(*uint8)(unsafe.Add(unsafe.Pointer(prob_model), pi)))<<7), int(*(*uint8)(unsafe.Add(unsafe.Pointer(prob_model), pi+1)))<<6)
 				} else if int(budget)-int(tell) >= 2 {
-					qi = ec_dec_icdf(dec, &small_energy_icdf[0], 2)
+					qi = ec_dec_icdf(dec, small_energy_icdf[:], 2)
 					qi = (qi >> 1) ^ (-(qi & 1))
 				} else if int(budget)-int(tell) >= 1 {
 					qi = -ec_dec_bit_logp(dec, 1)

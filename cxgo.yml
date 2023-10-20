@@ -32,6 +32,10 @@ define:
   - name: __STDC_VERSION__
     value: '199901'
 idents:
+  - name: ec_ctx
+    fields:
+      - name: buf
+        type: slice
   - name: DenseLayer
     fields:
       - name: bias
@@ -66,7 +70,62 @@ idents:
         type: slice
       - name: x
         type: slice
-
+  - name: ec_get_buffer
+    fields:
+      - name: return
+        type: slice
+  - name: celt_maxabs16
+    fields:
+      - name: x
+        type: slice
+  - name: is_digital_silence
+    fields:
+      - name: pcm
+        type: slice
+  - name: compute_frame_energy
+    fields:
+      - name: pcm
+        type: slice
+  - name: celt_inner_prod_c
+    fields:
+      - name: x
+        type: slice
+      - name: y
+        type: slice
+  - name: xcorr_kernel_c
+    fields:
+      - name: x
+        type: slice
+      - name: y
+        type: slice
+  - name: dual_inner_prod_c
+    fields:
+      - name: x
+        type: slice
+      - name: y01
+        type: slice
+      - name: y02
+        type: slice
+  - name: stereo_merge
+    fields:
+      - name: X
+        type: slice
+      - name: Y
+        type: slice
+  - name: opus_encode_native
+    fields:
+      - name: pcm
+        type: slice
+      - name: data
+        type: slice
+  - name: ec_dec_icdf
+    fields:
+      - name: _icdf
+        type: slice
+  - name: silk_Decode
+    fields:
+      - name: samplesOut
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -140,6 +199,11 @@ files:
   - name: celt/entcode.c
     skip:
       - opus_uint32
+    replace:
+      - old: 'type ec_enc ec_ctx'
+        new: 'type ec_enc = ec_ctx'
+      - old: 'type ec_dec ec_ctx'
+        new: 'type ec_dec = ec_ctx'
   - name: celt/mathops.c
     replace:
       - old: PI

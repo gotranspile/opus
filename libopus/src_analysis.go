@@ -476,7 +476,7 @@ func tonality_analysis(tonal *TonalityAnalysisState, celt_mode *OpusCustomMode, 
 	if tonal.Write_pos >= DETECT_SIZE {
 		tonal.Write_pos -= DETECT_SIZE
 	}
-	is_silence = is_digital_silence((*opus_val16)(unsafe.Pointer(&tonal.Inmem[0])), ANALYSIS_BUF_SIZE, 1, lsb_depth)
+	is_silence = is_digital_silence(tonal.Inmem[:], ANALYSIS_BUF_SIZE, 1, lsb_depth)
 	in = (*kiss_fft_cpx)(libc.Malloc(int(unsafe.Sizeof(kiss_fft_cpx{}) * 480)))
 	out = (*kiss_fft_cpx)(libc.Malloc(int(unsafe.Sizeof(kiss_fft_cpx{}) * 480)))
 	tonality = (*float32)(libc.Malloc(int(unsafe.Sizeof(float32(0)) * 240)))

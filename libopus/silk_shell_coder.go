@@ -15,7 +15,7 @@ func encode_split(psRangeEnc *ec_enc, p_child1 int, p int, shell_table *uint8) {
 }
 func decode_split(p_child1 *int16, p_child2 *int16, psRangeDec *ec_dec, p int, shell_table *uint8) {
 	if p > 0 {
-		*(*int16)(unsafe.Add(unsafe.Pointer(p_child1), unsafe.Sizeof(int16(0))*0)) = int16(ec_dec_icdf(psRangeDec, (*uint8)(unsafe.Add(unsafe.Pointer(shell_table), silk_shell_code_table_offsets[p])), 8))
+		*(*int16)(unsafe.Add(unsafe.Pointer(p_child1), unsafe.Sizeof(int16(0))*0)) = int16(ec_dec_icdf(psRangeDec, []byte((*uint8)(unsafe.Add(unsafe.Pointer(shell_table), silk_shell_code_table_offsets[p]))), 8))
 		*(*int16)(unsafe.Add(unsafe.Pointer(p_child2), unsafe.Sizeof(int16(0))*0)) = int16(p - int(*(*int16)(unsafe.Add(unsafe.Pointer(p_child1), unsafe.Sizeof(int16(0))*0))))
 	} else {
 		*(*int16)(unsafe.Add(unsafe.Pointer(p_child1), unsafe.Sizeof(int16(0))*0)) = 0

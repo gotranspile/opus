@@ -31,7 +31,7 @@ func silk_InitDecoder(decState unsafe.Pointer) int {
 	((*silk_decoder)(decState)).Prev_decode_only_middle = 0
 	return ret
 }
-func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *ec_dec, samplesOut *int16, nSamplesOut *int32, arch int) int {
+func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *ec_dec, samplesOut []int16, nSamplesOut *int32, arch int) int {
 	var (
 		i                        int
 		n                        int
@@ -112,7 +112,7 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 				if (*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).NFramesPerPacket == 1 {
 					(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).LBRR_flags[0] = 1
 				} else {
-					LBRR_symbol = int32(ec_dec_icdf(psRangeDec, silk_LBRR_flags_iCDF_ptr[(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).NFramesPerPacket-2], 8) + 1)
+					LBRR_symbol = int32(ec_dec_icdf(psRangeDec, []byte(silk_LBRR_flags_iCDF_ptr[(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).NFramesPerPacket-2]), 8) + 1)
 					for i = 0; i < (*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).NFramesPerPacket; i++ {
 						(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).LBRR_flags[i] = (int(LBRR_symbol) >> i) & 1
 					}
@@ -175,8 +175,8 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 		return int(decControl.NChannelsInternal) * ((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length + 2)
 	}()) * int(unsafe.Sizeof(int16(0)))))
 	if delay_stack_alloc != 0 {
-		samplesOut1_tmp[0] = samplesOut
-		samplesOut1_tmp[1] = (*int16)(unsafe.Add(unsafe.Pointer((*int16)(unsafe.Add(unsafe.Pointer(samplesOut), unsafe.Sizeof(int16(0))*uintptr((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length)))), unsafe.Sizeof(int16(0))*2))
+		samplesOut1_tmp[0] = &samplesOut[0]
+		samplesOut1_tmp[1] = &samplesOut[(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length+2]
 	} else {
 		samplesOut1_tmp[0] = samplesOut1_tmp_storage1
 		samplesOut1_tmp[1] = (*int16)(unsafe.Add(unsafe.Pointer((*int16)(unsafe.Add(unsafe.Pointer(samplesOut1_tmp_storage1), unsafe.Sizeof(int16(0))*uintptr((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length)))), unsafe.Sizeof(int16(0))*2))
@@ -228,7 +228,7 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 	if int(decControl.NChannelsAPI) == 2 {
 		resample_out_ptr = samplesOut2_tmp
 	} else {
-		resample_out_ptr = samplesOut
+		resample_out_ptr = &samplesOut[0]
 	}
 	samplesOut1_tmp_storage2 = (*int16)(libc.Malloc((func() int {
 		if delay_stack_alloc != 0 {
@@ -237,7 +237,7 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 		return ALLOC_NONE
 	}()) * int(unsafe.Sizeof(int16(0)))))
 	if delay_stack_alloc != 0 {
-		libc.MemCpy(unsafe.Pointer(samplesOut1_tmp_storage2), unsafe.Pointer(samplesOut), (int(decControl.NChannelsInternal)*((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length+2))*int(unsafe.Sizeof(int16(0)))+int((int64(uintptr(unsafe.Pointer(samplesOut1_tmp_storage2))-uintptr(unsafe.Pointer(samplesOut))))*0))
+		libc.MemCpy(unsafe.Pointer(samplesOut1_tmp_storage2), unsafe.Pointer(&samplesOut[0]), int(uintptr(unsafe.Pointer((*int16)(unsafe.Add(unsafe.Pointer((samplesOut1_tmp_storage2-&samplesOut[0]*(2*2))*(0*2)), unsafe.Sizeof(int16(0))*uintptr((int(decControl.NChannelsInternal)*((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length+2))*int(unsafe.Sizeof(int16(0))))))))))
 		samplesOut1_tmp[0] = samplesOut1_tmp_storage2
 		samplesOut1_tmp[1] = (*int16)(unsafe.Add(unsafe.Pointer((*int16)(unsafe.Add(unsafe.Pointer(samplesOut1_tmp_storage2), unsafe.Sizeof(int16(0))*uintptr((*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*0))).Frame_length)))), unsafe.Sizeof(int16(0))*2))
 	}
@@ -250,7 +250,7 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 		ret += silk_resampler(&(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*uintptr(n)))).Resampler_state, []int16(resample_out_ptr), []int16((*int16)(unsafe.Add(unsafe.Pointer(samplesOut1_tmp[n]), unsafe.Sizeof(int16(0))*1))), nSamplesOutDec)
 		if int(decControl.NChannelsAPI) == 2 {
 			for i = 0; i < int(*nSamplesOut); i++ {
-				*(*int16)(unsafe.Add(unsafe.Pointer(samplesOut), unsafe.Sizeof(int16(0))*uintptr(n+i*2))) = *(*int16)(unsafe.Add(unsafe.Pointer(resample_out_ptr), unsafe.Sizeof(int16(0))*uintptr(i)))
+				samplesOut[n+i*2] = *(*int16)(unsafe.Add(unsafe.Pointer(resample_out_ptr), unsafe.Sizeof(int16(0))*uintptr(i)))
 			}
 		}
 	}
@@ -258,11 +258,11 @@ func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, los
 		if stereo_to_mono != 0 {
 			ret += silk_resampler(&(*(*silk_decoder_state)(unsafe.Add(unsafe.Pointer(channel_state), unsafe.Sizeof(silk_decoder_state{})*1))).Resampler_state, []int16(resample_out_ptr), []int16((*int16)(unsafe.Add(unsafe.Pointer(samplesOut1_tmp[0]), unsafe.Sizeof(int16(0))*1))), nSamplesOutDec)
 			for i = 0; i < int(*nSamplesOut); i++ {
-				*(*int16)(unsafe.Add(unsafe.Pointer(samplesOut), unsafe.Sizeof(int16(0))*uintptr(i*2+1))) = *(*int16)(unsafe.Add(unsafe.Pointer(resample_out_ptr), unsafe.Sizeof(int16(0))*uintptr(i)))
+				samplesOut[i*2+1] = *(*int16)(unsafe.Add(unsafe.Pointer(resample_out_ptr), unsafe.Sizeof(int16(0))*uintptr(i)))
 			}
 		} else {
 			for i = 0; i < int(*nSamplesOut); i++ {
-				*(*int16)(unsafe.Add(unsafe.Pointer(samplesOut), unsafe.Sizeof(int16(0))*uintptr(i*2+1))) = *(*int16)(unsafe.Add(unsafe.Pointer(samplesOut), unsafe.Sizeof(int16(0))*uintptr(i*2+0)))
+				samplesOut[i*2+1] = samplesOut[i*2+0]
 			}
 		}
 	}

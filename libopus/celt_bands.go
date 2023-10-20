@@ -64,7 +64,7 @@ func compute_band_energies(m *OpusCustomMode, X *celt_sig, bandE *celt_ener, end
 			var sum opus_val32
 			sum = (func() opus_val32 {
 				_ = arch
-				return celt_inner_prod_c((*opus_val16)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_sig(0))*uintptr(c*N+(int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))<<LM)))))), (*opus_val16)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_sig(0))*uintptr(c*N+(int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))<<LM)))))), (int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i+1))))-int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i)))))<<LM)
+				return celt_inner_prod_c([]opus_val16((*celt_sig)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_sig(0))*uintptr(c*N+(int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))<<LM))))), []opus_val16((*celt_sig)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_sig(0))*uintptr(c*N+(int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))<<LM))))), (int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i+1))))-int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i)))))<<LM)
 			}()) + opus_val32(1e-27)
 			*(*celt_ener)(unsafe.Add(unsafe.Pointer(bandE), unsafe.Sizeof(celt_ener(0))*uintptr(i+c*m.NbEBands))) = celt_ener(float32(math.Sqrt(float64(sum))))
 		}
@@ -321,7 +321,7 @@ func stereo_split(X *celt_norm, Y *celt_norm, N int) {
 		*(*celt_norm)(unsafe.Add(unsafe.Pointer(Y), unsafe.Sizeof(celt_norm(0))*uintptr(j))) = celt_norm(r - l)
 	}
 }
-func stereo_merge(X *celt_norm, Y *celt_norm, mid opus_val16, N int, arch int) {
+func stereo_merge(X []celt_norm, Y []celt_norm, mid opus_val16, N int, arch int) {
 	var (
 		j     int
 		xp    opus_val32 = 0
@@ -334,13 +334,13 @@ func stereo_merge(X *celt_norm, Y *celt_norm, mid opus_val16, N int, arch int) {
 		rgain opus_val32
 	)
 	_ = arch
-	dual_inner_prod_c((*opus_val16)(unsafe.Pointer(Y)), (*opus_val16)(unsafe.Pointer(X)), (*opus_val16)(unsafe.Pointer(Y)), N, &xp, &side)
+	dual_inner_prod_c([]opus_val16(Y), []opus_val16(X), []opus_val16(Y), N, &xp, &side)
 	xp = opus_val32(mid * opus_val16(xp))
 	mid2 = mid
 	El = (opus_val32(mid2) * opus_val32(mid2)) + side - opus_val32(float32(xp)*2)
 	Er = (opus_val32(mid2) * opus_val32(mid2)) + side + opus_val32(float32(xp)*2)
 	if Er < opus_val32(0.0006) || El < opus_val32(0.0006) {
-		libc.MemCpy(unsafe.Pointer(Y), unsafe.Pointer(X), N*int(unsafe.Sizeof(celt_norm(0)))+int((int64(uintptr(unsafe.Pointer(Y))-uintptr(unsafe.Pointer(X))))*0))
+		libc.MemCpy(unsafe.Pointer(&Y[0]), unsafe.Pointer(&X[0]), int(uintptr(unsafe.Pointer((*celt_norm)(unsafe.Add(unsafe.Pointer((&Y[0]-&X[0]*(4*4))*(0*4)), unsafe.Sizeof(celt_norm(0))*uintptr(N*int(unsafe.Sizeof(celt_norm(0))))))))))
 		return
 	}
 	t = El
@@ -352,10 +352,10 @@ func stereo_merge(X *celt_norm, Y *celt_norm, mid opus_val16, N int, arch int) {
 			r celt_norm
 			l celt_norm
 		)
-		l = celt_norm(mid * opus_val16(*(*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(j)))))
-		r = *(*celt_norm)(unsafe.Add(unsafe.Pointer(Y), unsafe.Sizeof(celt_norm(0))*uintptr(j)))
-		*(*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(j))) = celt_norm(lgain * opus_val32(l-r))
-		*(*celt_norm)(unsafe.Add(unsafe.Pointer(Y), unsafe.Sizeof(celt_norm(0))*uintptr(j))) = celt_norm(rgain * opus_val32(l+r))
+		l = celt_norm(mid * opus_val16(X[j]))
+		r = Y[j]
+		X[j] = celt_norm(lgain * opus_val32(l-r))
+		Y[j] = celt_norm(rgain * opus_val32(l+r))
 	}
 }
 func spreading_decision(m *OpusCustomMode, X *celt_norm, average *int, last_decision int, hf_average *int, tapset_decision *int, update_hf int, end int, C int, M int, spread_weight *int) int {
@@ -1206,7 +1206,7 @@ func quant_band_stereo(ctx *band_ctx, X *celt_norm, Y *celt_norm, N int, b int, 
 	}
 	if ctx.Resynth != 0 {
 		if N != 2 {
-			stereo_merge(X, Y, mid, N, ctx.Arch)
+			stereo_merge([]celt_norm(X), []celt_norm(Y), mid, N, ctx.Arch)
 		}
 		if inv != 0 {
 			var j int
@@ -1502,10 +1502,10 @@ func quant_all_bands(encode int, m *OpusCustomMode, start int, end int, X_ *celt
 					}(), lowband_scratch, int(cm))
 					dist0 = opus_val32(((w[0]) * opus_val16(func() opus_val32 {
 						_ = arch
-						return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(X_save)), (*opus_val16)(unsafe.Pointer(X)), N)
+						return celt_inner_prod_c([]opus_val16(X_save), []opus_val16(X), N)
 					}())) + (w[1])*opus_val16(func() opus_val32 {
 						_ = arch
-						return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(Y_save)), (*opus_val16)(unsafe.Pointer(Y)), N)
+						return celt_inner_prod_c([]opus_val16(Y_save), []opus_val16(Y), N)
 					}()))
 					cm2 = x_cm
 					ec_save2 = *ec
@@ -1517,7 +1517,7 @@ func quant_all_bands(encode int, m *OpusCustomMode, start int, end int, X_ *celt
 					}
 					nstart_bytes = int(ec_save.Offs)
 					nend_bytes = int(ec_save.Storage)
-					bytes_buf = (*uint8)(unsafe.Add(unsafe.Pointer(ec_save.Buf), nstart_bytes))
+					bytes_buf = (*uint8)(unsafe.Pointer(&ec_save.Buf[nstart_bytes]))
 					save_bytes = nend_bytes - nstart_bytes
 					libc.MemCpy(unsafe.Pointer(&bytes_save[0]), unsafe.Pointer(bytes_buf), save_bytes*int(unsafe.Sizeof(uint8(0)))+int((int64(uintptr(unsafe.Pointer(&bytes_save[0]))-uintptr(unsafe.Pointer(bytes_buf))))*0))
 					*ec = ec_save
@@ -1541,10 +1541,10 @@ func quant_all_bands(encode int, m *OpusCustomMode, start int, end int, X_ *celt
 					}(), lowband_scratch, int(cm))
 					dist1 = opus_val32(((w[0]) * opus_val16(func() opus_val32 {
 						_ = arch
-						return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(X_save)), (*opus_val16)(unsafe.Pointer(X)), N)
+						return celt_inner_prod_c([]opus_val16(X_save), []opus_val16(X), N)
 					}())) + (w[1])*opus_val16(func() opus_val32 {
 						_ = arch
-						return celt_inner_prod_c((*opus_val16)(unsafe.Pointer(Y_save)), (*opus_val16)(unsafe.Pointer(Y)), N)
+						return celt_inner_prod_c([]opus_val16(Y_save), []opus_val16(Y), N)
 					}()))
 					if dist0 >= dist1 {
 						x_cm = cm2

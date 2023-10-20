@@ -19,7 +19,7 @@ func silk_decode_pulses(psRangeDec *ec_dec, pulses []int16, signalType int, quan
 		pulses_ptr     *int16
 		cdf_ptr        *uint8
 	)
-	RateLevelIndex = ec_dec_icdf(psRangeDec, &silk_rate_levels_iCDF[signalType>>1][0], 8)
+	RateLevelIndex = ec_dec_icdf(psRangeDec, silk_rate_levels_iCDF[signalType>>1][:], 8)
 	iter = frame_length >> LOG2_SHELL_CODEC_FRAME_LENGTH
 	if iter*SHELL_CODEC_FRAME_LENGTH < frame_length {
 		iter++
@@ -27,10 +27,10 @@ func silk_decode_pulses(psRangeDec *ec_dec, pulses []int16, signalType int, quan
 	cdf_ptr = &silk_pulses_per_block_iCDF[RateLevelIndex][0]
 	for i = 0; i < iter; i++ {
 		nLshifts[i] = 0
-		sum_pulses[i] = ec_dec_icdf(psRangeDec, cdf_ptr, 8)
+		sum_pulses[i] = ec_dec_icdf(psRangeDec, []byte(cdf_ptr), 8)
 		for sum_pulses[i] == int(SILK_MAX_PULSES+1) {
 			nLshifts[i]++
-			sum_pulses[i] = ec_dec_icdf(psRangeDec, &silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][nLshifts[i] == 10], 8)
+			sum_pulses[i] = ec_dec_icdf(psRangeDec, []byte(&silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][nLshifts[i] == 10]), 8)
 		}
 	}
 	for i = 0; i < iter; i++ {
@@ -48,7 +48,7 @@ func silk_decode_pulses(psRangeDec *ec_dec, pulses []int16, signalType int, quan
 				abs_q = int(*(*int16)(unsafe.Add(unsafe.Pointer(pulses_ptr), unsafe.Sizeof(int16(0))*uintptr(k))))
 				for j = 0; j < nLS; j++ {
 					abs_q = int(int32(int(uint32(int32(abs_q))) << 1))
-					abs_q += ec_dec_icdf(psRangeDec, &silk_lsb_iCDF[0], 8)
+					abs_q += ec_dec_icdf(psRangeDec, silk_lsb_iCDF[:], 8)
 				}
 				*(*int16)(unsafe.Add(unsafe.Pointer(pulses_ptr), unsafe.Sizeof(int16(0))*uintptr(k))) = int16(abs_q)
 			}

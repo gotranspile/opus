@@ -11,7 +11,7 @@ const BITRES = 3
 
 type ec_window uint32
 type ec_ctx struct {
-	Buf         *uint8
+	Buf         []byte
 	Storage     uint32
 	End_offs    uint32
 	End_window  ec_window
@@ -24,13 +24,13 @@ type ec_ctx struct {
 	Rem         int
 	Error       int
 }
-type ec_enc ec_ctx
-type ec_dec ec_ctx
+type ec_enc = ec_ctx
+type ec_dec = ec_ctx
 
 func ec_range_bytes(_this *ec_ctx) uint32 {
 	return _this.Offs
 }
-func ec_get_buffer(_this *ec_ctx) *uint8 {
+func ec_get_buffer(_this *ec_ctx) []byte {
 	return _this.Buf
 }
 func ec_get_error(_this *ec_ctx) int {

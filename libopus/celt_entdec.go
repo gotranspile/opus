@@ -9,22 +9,22 @@ const _entdec_H = 1
 
 func ec_read_byte(_this *ec_dec) int {
 	if int(_this.Offs) < int(_this.Storage) {
-		return int(*(*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), func() uint32 {
+		return int(_this.Buf[func() uint32 {
 			p := &_this.Offs
 			x := *p
 			*p++
 			return x
-		}())))
+		}()])
 	}
 	return 0
 }
 func ec_read_byte_from_end(_this *ec_dec) int {
 	if int(_this.End_offs) < int(_this.Storage) {
-		return int(*(*uint8)(unsafe.Add(unsafe.Pointer(_this.Buf), int(_this.Storage)-int(func() uint32 {
+		return int(_this.Buf[int(_this.Storage)-int(func() uint32 {
 			p := &_this.End_offs
 			*p++
 			return *p
-		}()))))
+		}())])
 	}
 	return 0
 }
@@ -40,7 +40,7 @@ func ec_dec_normalize(_this *ec_dec) {
 	}
 }
 func ec_dec_init(_this *ec_dec, _buf *uint8, _storage uint32) {
-	_this.Buf = _buf
+	_this.Buf = []byte(_buf)
 	_this.Storage = _storage
 	_this.End_offs = 0
 	_this.End_window = 0
@@ -98,7 +98,7 @@ func ec_dec_bit_logp(_this *ec_dec, _logp uint) int {
 	ec_dec_normalize(_this)
 	return ret
 }
-func ec_dec_icdf(_this *ec_dec, _icdf *uint8, _ftb uint) int {
+func ec_dec_icdf(_this *ec_dec, _icdf []byte, _ftb uint) int {
 	var (
 		r   uint32
 		d   uint32
@@ -112,11 +112,11 @@ func ec_dec_icdf(_this *ec_dec, _icdf *uint8, _ftb uint) int {
 	ret = -1
 	for {
 		t = s
-		s = uint32(int32(int(r) * int(*(*uint8)(unsafe.Add(unsafe.Pointer(_icdf), func() int {
+		s = r * uint32(_icdf[func() int {
 			p := &ret
 			*p++
 			return *p
-		}())))))
+		}()])
 		if int(d) >= int(s) {
 			break
 		}

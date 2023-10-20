@@ -320,7 +320,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ int32, pcm *opus_val16
 		for {
 			{
 				var first_frame int = int(libc.BoolToInt(decoded_samples == 0))
-				silk_ret = silk_Decode(silk_dec, &st.DecControl, lost_flag, first_frame, &dec, pcm_ptr, &silk_frame_size, st.Arch)
+				silk_ret = silk_Decode(silk_dec, &st.DecControl, lost_flag, first_frame, &dec, []int16(pcm_ptr), &silk_frame_size, st.Arch)
 				if silk_ret != 0 {
 					if lost_flag != 0 {
 						silk_frame_size = int32(frame_size)

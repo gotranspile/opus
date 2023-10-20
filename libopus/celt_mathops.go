@@ -1,7 +1,5 @@
 package libopus
 
-import "unsafe"
-
 const celtPI = 3.141592653
 
 func fast_atan2f(y float32, x float32) float32 {
@@ -37,22 +35,22 @@ func fast_atan2f(y float32, x float32) float32 {
 		}())
 	}
 }
-func celt_maxabs16(x *opus_val16, len_ int) opus_val32 {
+func celt_maxabs16(x []opus_val16, len_ int) opus_val32 {
 	var (
 		i      int
 		maxval opus_val16 = 0
 		minval opus_val16 = 0
 	)
 	for i = 0; i < len_; i++ {
-		if maxval > (*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))) {
+		if maxval > (x[i]) {
 			maxval = maxval
 		} else {
-			maxval = *(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))
+			maxval = x[i]
 		}
-		if minval < (*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))) {
+		if minval < (x[i]) {
 			minval = minval
 		} else {
-			minval = *(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i)))
+			minval = x[i]
 		}
 	}
 	if maxval > (-minval) {
