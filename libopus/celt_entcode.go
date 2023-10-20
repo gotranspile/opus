@@ -10,7 +10,6 @@ const BITRES = celt.BITRES
 type ec_window = celt.ECWindow
 type ec_ctx = celt.ECCtx
 type ec_enc = celt.ECEnc
-type ec_dec = celt.ECDec
 
 func celt_udiv(n uint32, d uint32) uint32 {
 	return n / d

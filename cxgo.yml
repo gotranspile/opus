@@ -198,6 +198,8 @@ files:
   - name: celt/arch.h
   - name: celt/entcode.c
     disabled: true # DONE
+  - name: celt/entdec.c
+    disabled: true # DONE
   - name: celt/mathops.c
     replace:
       - old: PI

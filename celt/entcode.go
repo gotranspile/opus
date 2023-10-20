@@ -20,8 +20,9 @@ type ECCtx struct {
 	Rem         int
 	Error       int
 }
-type ECEnc = ECCtx
-type ECDec = ECCtx
+type ECEnc struct {
+	ECCtx
+}
 
 func EC_ilog(v uint32) int {
 	return 32 - bits.LeadingZeros32(v) // TODO: check
