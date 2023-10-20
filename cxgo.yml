@@ -229,6 +229,8 @@ files:
     replace:
       - old: QA
         new: NLSF2A_QA
+  - name: silk/NLSF_unpack.c
+    disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
