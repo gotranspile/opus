@@ -6,18 +6,18 @@ import (
 )
 
 type mdct_lookup struct {
-	N        int64
-	Maxshift int64
+	N        int
+	Maxshift int
 	Kfft     [4]*kiss_fft_state
 	Trig     *float32
 }
 
-func clt_mdct_forward_c(l *mdct_lookup, in *float32, out *float32, window *opus_val16, overlap int64, shift int64, stride int64, arch int64) {
+func clt_mdct_forward_c(l *mdct_lookup, in *float32, out *float32, window *opus_val16, overlap int, shift int, stride int, arch int) {
 	var (
-		i     int64
-		N     int64
-		N2    int64
-		N4    int64
+		i     int
+		N     int
+		N2    int
+		N4    int
 		f     *float32
 		f2    *kiss_fft_cpx
 		st    *kiss_fft_state = l.Kfft[shift]
@@ -34,8 +34,8 @@ func clt_mdct_forward_c(l *mdct_lookup, in *float32, out *float32, window *opus_
 	}
 	N2 = N >> 1
 	N4 = N >> 2
-	f = (*float32)(libc.Malloc(int(N2 * int64(unsafe.Sizeof(float32(0))))))
-	f2 = (*kiss_fft_cpx)(libc.Malloc(int(N4 * int64(unsafe.Sizeof(kiss_fft_cpx{})))))
+	f = (*float32)(libc.Malloc(N2 * int(unsafe.Sizeof(float32(0)))))
+	f2 = (*kiss_fft_cpx)(libc.Malloc(N4 * int(unsafe.Sizeof(kiss_fft_cpx{}))))
 	{
 		var (
 			xp1 *float32    = (*float32)(unsafe.Add(unsafe.Pointer(in), unsafe.Sizeof(float32(0))*uintptr(overlap>>1)))
@@ -134,7 +134,7 @@ func clt_mdct_forward_c(l *mdct_lookup, in *float32, out *float32, window *opus_
 			yc.I = yi
 			yc.R = float32(scale * opus_val16(yc.R))
 			yc.I = float32(scale * opus_val16(yc.I))
-			*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(f2), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*opus_int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(opus_int16(0))*uintptr(i)))))) = yc
+			*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(f2), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(int16(0))*uintptr(i)))))) = yc
 		}
 	}
 	opus_fft_impl(st, f2)
@@ -160,12 +160,12 @@ func clt_mdct_forward_c(l *mdct_lookup, in *float32, out *float32, window *opus_
 		}
 	}
 }
-func clt_mdct_backward_c(l *mdct_lookup, in *float32, out *float32, window *opus_val16, overlap int64, shift int64, stride int64, arch int64) {
+func clt_mdct_backward_c(l *mdct_lookup, in *float32, out *float32, window *opus_val16, overlap int, shift int, stride int, arch int) {
 	var (
-		i    int64
-		N    int64
-		N2   int64
-		N4   int64
+		i    int
+		N    int
+		N2   int
+		N4   int
 		trig *float32
 	)
 	_ = arch
@@ -179,22 +179,22 @@ func clt_mdct_backward_c(l *mdct_lookup, in *float32, out *float32, window *opus
 	N4 = N >> 2
 	{
 		var (
-			xp1    *float32    = in
-			xp2    *float32    = (*float32)(unsafe.Add(unsafe.Pointer(in), unsafe.Sizeof(float32(0))*uintptr(stride*(N2-1))))
-			yp     *float32    = (*float32)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(float32(0))*uintptr(overlap>>1)))
-			t      *float32    = (*float32)(unsafe.Add(unsafe.Pointer(trig), unsafe.Sizeof(float32(0))*0))
-			bitrev *opus_int16 = l.Kfft[shift].Bitrev
+			xp1    *float32 = in
+			xp2    *float32 = (*float32)(unsafe.Add(unsafe.Pointer(in), unsafe.Sizeof(float32(0))*uintptr(stride*(N2-1))))
+			yp     *float32 = (*float32)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(float32(0))*uintptr(overlap>>1)))
+			t      *float32 = (*float32)(unsafe.Add(unsafe.Pointer(trig), unsafe.Sizeof(float32(0))*0))
+			bitrev *int16   = l.Kfft[shift].Bitrev
 		)
 		for i = 0; i < N4; i++ {
 			var (
-				rev int64
+				rev int
 				yr  float32
 				yi  float32
 			)
-			rev = int64(*func() *opus_int16 {
+			rev = int(*func() *int16 {
 				p := &bitrev
 				x := *p
-				*p = (*opus_int16)(unsafe.Add(unsafe.Pointer(*p), unsafe.Sizeof(opus_int16(0))*1))
+				*p = (*int16)(unsafe.Add(unsafe.Pointer(*p), unsafe.Sizeof(int16(0))*1))
 				return x
 			}())
 			yr = ((*xp2) * (*(*float32)(unsafe.Add(unsafe.Pointer(t), unsafe.Sizeof(float32(0))*uintptr(i))))) + (*xp1)*(*(*float32)(unsafe.Add(unsafe.Pointer(t), unsafe.Sizeof(float32(0))*uintptr(N4+i))))

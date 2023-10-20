@@ -13,23 +13,23 @@ type kiss_twiddle_cpx struct {
 	I float32
 }
 type arch_fft_state struct {
-	Is_supported int64
+	Is_supported int
 	Priv         unsafe.Pointer
 }
 type kiss_fft_state struct {
-	Nfft     int64
+	Nfft     int
 	Scale    opus_val16
-	Shift    int64
-	Factors  [16]opus_int16
-	Bitrev   *opus_int16
+	Shift    int
+	Factors  [16]int16
+	Bitrev   *int16
 	Twiddles *kiss_twiddle_cpx
 	Arch_fft *arch_fft_state
 }
 
-func kf_bfly2(Fout *kiss_fft_cpx, m int64, N int64) {
+func kf_bfly2(Fout *kiss_fft_cpx, m int, N int) {
 	var (
 		Fout2 *kiss_fft_cpx
-		i     int64
+		i     int
 	)
 	_ = m
 	{
@@ -105,8 +105,8 @@ func kf_bfly2(Fout *kiss_fft_cpx, m int64, N int64) {
 		}
 	}
 }
-func kf_bfly4(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N int64, mm int64) {
-	var i int64
+func kf_bfly4(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int, N int, mm int) {
+	var i int
 	if m == 1 {
 		for i = 0; i < N; i++ {
 			var (
@@ -163,13 +163,13 @@ func kf_bfly4(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 		}
 	} else {
 		var (
-			j        int64
+			j        int
 			scratch  [6]kiss_fft_cpx
 			tw1      *kiss_twiddle_cpx
 			tw2      *kiss_twiddle_cpx
 			tw3      *kiss_twiddle_cpx
-			m2       int64         = m * 2
-			m3       int64         = m * 3
+			m2       int           = m * 2
+			m3       int           = m * 3
 			Fout_beg *kiss_fft_cpx = Fout
 		)
 		for i = 0; i < N; i++ {
@@ -257,9 +257,9 @@ func kf_bfly4(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 		}
 	}
 }
-func kf_bfly3(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N int64, mm int64) {
+func kf_bfly3(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int, N int, mm int) {
 	var (
-		i        int64
+		i        int
 		k        uint64
 		m2       uint64 = uint64(m * 2)
 		tw1      *kiss_twiddle_cpx
@@ -307,8 +307,8 @@ func kf_bfly3(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 			}
 			tw1 = (*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw1), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(fstride)))
 			tw2 = (*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw2), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(fstride*2)))
-			(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(Fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(m)))).R = float32(float64(Fout.R) - float64(scratch[3].R)*0.5)
-			(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(Fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(m)))).I = float32(float64(Fout.I) - float64(scratch[3].I)*0.5)
+			(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(Fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(m)))).R = Fout.R - scratch[3].R*0.5
+			(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(Fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(m)))).I = Fout.I - scratch[3].I*0.5
 			for {
 				(scratch[0]).R *= epi3.I
 				(scratch[0]).I *= epi3.I
@@ -338,15 +338,15 @@ func kf_bfly3(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 		}
 	}
 }
-func kf_bfly5(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N int64, mm int64) {
+func kf_bfly5(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int, N int, mm int) {
 	var (
 		Fout0    *kiss_fft_cpx
 		Fout1    *kiss_fft_cpx
 		Fout2    *kiss_fft_cpx
 		Fout3    *kiss_fft_cpx
 		Fout4    *kiss_fft_cpx
-		i        int64
-		u        int64
+		i        int
+		u        int
 		scratch  [13]kiss_fft_cpx
 		tw       *kiss_twiddle_cpx
 		ya       kiss_twiddle_cpx
@@ -366,29 +366,29 @@ func kf_bfly5(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 		for u = 0; u < m; u++ {
 			scratch[0] = *Fout0
 			for {
-				(scratch[1]).R = (*Fout1).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u)*fstride)))).R - (*Fout1).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u)*fstride)))).I
-				(scratch[1]).I = (*Fout1).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u)*fstride)))).I + (*Fout1).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u)*fstride)))).R
+				(scratch[1]).R = (*Fout1).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*int(fstride))))).R - (*Fout1).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*int(fstride))))).I
+				(scratch[1]).I = (*Fout1).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*int(fstride))))).I + (*Fout1).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*int(fstride))))).R
 				if true {
 					break
 				}
 			}
 			for {
-				(scratch[2]).R = (*Fout2).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*2)*fstride)))).R - (*Fout2).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*2)*fstride)))).I
-				(scratch[2]).I = (*Fout2).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*2)*fstride)))).I + (*Fout2).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*2)*fstride)))).R
+				(scratch[2]).R = (*Fout2).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*2*int(fstride))))).R - (*Fout2).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*2*int(fstride))))).I
+				(scratch[2]).I = (*Fout2).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*2*int(fstride))))).I + (*Fout2).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*2*int(fstride))))).R
 				if true {
 					break
 				}
 			}
 			for {
-				(scratch[3]).R = (*Fout3).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*3)*fstride)))).R - (*Fout3).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*3)*fstride)))).I
-				(scratch[3]).I = (*Fout3).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*3)*fstride)))).I + (*Fout3).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*3)*fstride)))).R
+				(scratch[3]).R = (*Fout3).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*3*int(fstride))))).R - (*Fout3).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*3*int(fstride))))).I
+				(scratch[3]).I = (*Fout3).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*3*int(fstride))))).I + (*Fout3).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*3*int(fstride))))).R
 				if true {
 					break
 				}
 			}
 			for {
-				(scratch[4]).R = (*Fout4).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*4)*fstride)))).R - (*Fout4).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*4)*fstride)))).I
-				(scratch[4]).I = (*Fout4).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*4)*fstride)))).I + (*Fout4).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(uint64(u*4)*fstride)))).R
+				(scratch[4]).R = (*Fout4).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*4*int(fstride))))).R - (*Fout4).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*4*int(fstride))))).I
+				(scratch[4]).I = (*Fout4).R*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*4*int(fstride))))).I + (*Fout4).I*(*(*kiss_twiddle_cpx)(unsafe.Add(unsafe.Pointer(tw), unsafe.Sizeof(kiss_twiddle_cpx{})*uintptr(u*4*int(fstride))))).R
 				if true {
 					break
 				}
@@ -469,13 +469,13 @@ func kf_bfly5(Fout *kiss_fft_cpx, fstride uint64, st *kiss_fft_state, m int64, N
 }
 func opus_fft_impl(st *kiss_fft_state, fout *kiss_fft_cpx) {
 	var (
-		m2      int64
-		m       int64
-		p       int64
-		L       int64
-		fstride [8]int64
-		i       int64
-		shift   int64
+		m2      int
+		m       int
+		p       int
+		L       int
+		fstride [8]int
+		i       int
+		shift   int
 	)
 	if st.Shift > 0 {
 		shift = st.Shift
@@ -485,18 +485,18 @@ func opus_fft_impl(st *kiss_fft_state, fout *kiss_fft_cpx) {
 	fstride[0] = 1
 	L = 0
 	for {
-		p = int64(st.Factors[L*2])
-		m = int64(st.Factors[L*2+1])
+		p = int(st.Factors[L*2])
+		m = int(st.Factors[L*2+1])
 		fstride[L+1] = fstride[L] * p
 		L++
 		if m == 1 {
 			break
 		}
 	}
-	m = int64(st.Factors[L*2-1])
+	m = int(st.Factors[L*2-1])
 	for i = L - 1; i >= 0; i-- {
 		if i != 0 {
-			m2 = int64(st.Factors[i*2-1])
+			m2 = int(st.Factors[i*2-1])
 		} else {
 			m2 = 1
 		}
@@ -515,21 +515,21 @@ func opus_fft_impl(st *kiss_fft_state, fout *kiss_fft_cpx) {
 }
 func opus_fft_c(st *kiss_fft_state, fin *kiss_fft_cpx, fout *kiss_fft_cpx) {
 	var (
-		i     int64
+		i     int
 		scale opus_val16
 	)
 	scale = st.Scale
 	for i = 0; i < st.Nfft; i++ {
 		var x kiss_fft_cpx = *(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fin), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(i)))
-		(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*opus_int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(opus_int16(0))*uintptr(i))))))).R = float32(scale * opus_val16(x.R))
-		(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*opus_int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(opus_int16(0))*uintptr(i))))))).I = float32(scale * opus_val16(x.I))
+		(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(int16(0))*uintptr(i))))))).R = float32(scale * opus_val16(x.R))
+		(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(int16(0))*uintptr(i))))))).I = float32(scale * opus_val16(x.I))
 	}
 	opus_fft_impl(st, fout)
 }
 func opus_ifft_c(st *kiss_fft_state, fin *kiss_fft_cpx, fout *kiss_fft_cpx) {
-	var i int64
+	var i int
 	for i = 0; i < st.Nfft; i++ {
-		*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*opus_int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(opus_int16(0))*uintptr(i)))))) = *(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fin), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(i)))
+		*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(*(*int16)(unsafe.Add(unsafe.Pointer(st.Bitrev), unsafe.Sizeof(int16(0))*uintptr(i)))))) = *(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fin), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(i)))
 	}
 	for i = 0; i < st.Nfft; i++ {
 		(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(i)))).I = -(*(*kiss_fft_cpx)(unsafe.Add(unsafe.Pointer(fout), unsafe.Sizeof(kiss_fft_cpx{})*uintptr(i)))).I

@@ -6,7 +6,7 @@ root: .
 out: ./libopus
 int_size: 8
 ptr_size: 8
-use_go_int: false
+use_go_int: true
 include:
   - './include'
   - './celt'
@@ -25,6 +25,31 @@ define:
     value: malloc
   - name: opus_free
     value: free
+  # TODO: add to cxgo
+  - name: HAVE_STDINT_H
+  - name: __STDC__
+    value: '1'
+  - name: __STDC_VERSION__
+    value: '199901'
+src_files:
+  - name: include/opus_types.h
+    content: |
+      #ifndef OPUS_TYPES_H
+      #define OPUS_TYPES_H
+      #include <stdint.h>
+      
+      #define opus_int         int
+      #define opus_uint        unsigned int
+      #define opus_int8        int8_t
+      #define opus_int16       int16_t
+      #define opus_int32       int32_t
+      #define opus_int64       int64_t
+      #define opus_uint8       uint8_t
+      #define opus_uint16      uint16_t
+      #define opus_uint32      uint32_t
+      #define opus_uint64      uint64_t
+      
+      #endif // OPUS_TYPES_H
 files:
   - name: src/tansig_table.h
   - name: src/opus_private.h
@@ -38,44 +63,87 @@ files:
   - name: src/repacketizer.c
   # ==== SILK ====
   - name: silk/control.h
+  - name: silk/macros.h
   - name: silk/define.h
+    replace:
+      - old: 'uint8 = math.MaxUint8'
+        new: '= math.MaxUint8'
   - name: silk/errors.h
   - name: silk/structs.h
   - name: silk/typedef.h
+    replace:
+      - old: 'uint32 ='
+        new: '='
+      - old: 'uint16 ='
+        new: '='
+      - old: 'uint8 ='
+        new: '='
   - name: silk/tuning_parameters.h
   - name: silk/pitch_est_defines.h
+  - name: silk/resampler_private.h
   - name: silk/resampler_structs.h
     predef: |
-      #include <stdint.h>
-      #define opus_int int
-      #define opus_int32 int32_t
-      #define opus_int16 int16_t
+      #include "opus_types.h"
   - name: silk/float/structs_FLP.h
   - name: silk/float/SigProc_FLP.h
+  - name: silk/SigProc_FIX.h
+  - name: silk/Inlines.h
+    predef: |
+      #include <stdint.h>
+      #include "opus_types.h"
+      #include "SigProc_FIX.h"
+      #define silk_int32_MAX INT32_MAX
+      #define OPUS_INLINE
   - name: silk/NLSF2A.c
-    idents:
-      - name: QA
-        rename: NLSF2A_QA
+    replace:
+      - old: QA
+        new: NLSF2A_QA
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
   - name: celt/entcode.c
     skip:
       - opus_uint32
+  - name: celt/mathops.c
+    replace:
+      - old: PI
+        new: celtPI
   - name: celt/celt_encoder.c
     disabled: true # FIXME: if in for init incorrectly unwrapped
+  - name: celt/opus_custom_demo.c
+    disabled: true
+  - name: celt/static_modes_float.h
+    predef: |
+      #include "opus_types.h"
+      static const opus_int16 eband5ms[22];
+      static const unsigned char band_allocation[231];
+  - name: celt/quant_bands.c
+    replace:
+      - old: 'float64(1<<'
+        new: 'float64(int64(1)<<'
   - name: celt/*.c
   # ==== Additional Go code ====
+  - name: celt_mathops_const.go
+    content: |
+      package libopus
+      
+      const (
+        cA = 0.43157974
+        cB = 0.67848403
+        cC = 0.08595542
+        cE = float32(celtPI)/2
+      )
+  - name: hacks.go
+    content: |
+      package libopus
+      
+      func opus_select_arch() int { panic("TODO") }
   - name: types.go
     content: |
       package libopus
       
       const ALLOC_NONE = 1
-      
-      type opus_int16 = int16
-      type opus_uint16 = uint16
-      type opus_int32 = int32
-      type opus_uint32 = uint32
+      const CHAR_BIT = 8
   - name: opus_test.go
     content: |
       package libopus

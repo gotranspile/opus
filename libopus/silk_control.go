@@ -5,37 +5,37 @@ const FLAG_PACKET_LOST = 1
 const FLAG_DECODE_LBRR = 2
 
 type silk_EncControlStruct struct {
-	NChannelsAPI              opus_int32
-	NChannelsInternal         opus_int32
-	API_sampleRate            opus_int32
-	MaxInternalSampleRate     opus_int32
-	MinInternalSampleRate     opus_int32
-	DesiredInternalSampleRate opus_int32
-	PayloadSize_ms            int64
-	BitRate                   opus_int32
-	PacketLossPercentage      int64
-	Complexity                int64
-	UseInBandFEC              int64
-	LBRR_coded                int64
-	UseDTX                    int64
-	UseCBR                    int64
-	MaxBits                   int64
-	ToMono                    int64
-	OpusCanSwitch             int64
-	ReducedDependency         int64
-	InternalSampleRate        opus_int32
-	AllowBandwidthSwitch      int64
-	InWBmodeWithoutVariableLP int64
-	StereoWidth_Q14           int64
-	SwitchReady               int64
-	SignalType                int64
-	Offset                    int64
+	NChannelsAPI              int32
+	NChannelsInternal         int32
+	API_sampleRate            int32
+	MaxInternalSampleRate     int32
+	MinInternalSampleRate     int32
+	DesiredInternalSampleRate int32
+	PayloadSize_ms            int
+	BitRate                   int32
+	PacketLossPercentage      int
+	Complexity                int
+	UseInBandFEC              int
+	LBRR_coded                int
+	UseDTX                    int
+	UseCBR                    int
+	MaxBits                   int
+	ToMono                    int
+	OpusCanSwitch             int
+	ReducedDependency         int
+	InternalSampleRate        int32
+	AllowBandwidthSwitch      int
+	InWBmodeWithoutVariableLP int
+	StereoWidth_Q14           int
+	SwitchReady               int
+	SignalType                int
+	Offset                    int
 }
 type silk_DecControlStruct struct {
-	NChannelsAPI       opus_int32
-	NChannelsInternal  opus_int32
-	API_sampleRate     opus_int32
-	InternalSampleRate opus_int32
-	PayloadSize_ms     int64
-	PrevPitchLag       int64
+	NChannelsAPI       int32
+	NChannelsInternal  int32
+	API_sampleRate     int32
+	InternalSampleRate int32
+	PayloadSize_ms     int
+	PrevPitchLag       int
 }

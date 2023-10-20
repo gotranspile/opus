@@ -7,9 +7,9 @@ import (
 	"unsafe"
 )
 
-func xcorr_kernel_c(x *opus_val16, y *opus_val16, sum [4]opus_val32, len_ int64) {
+func xcorr_kernel_c(x *opus_val16, y *opus_val16, sum [4]opus_val32, len_ int) {
 	var (
-		j   int64
+		j   int
 		y_0 opus_val16
 		y_1 opus_val16
 		y_2 opus_val16
@@ -101,7 +101,7 @@ func xcorr_kernel_c(x *opus_val16, y *opus_val16, sum [4]opus_val32, len_ int64)
 		sum[2] = (sum[2]) + opus_val32(tmp)*opus_val32(y_1)
 		sum[3] = (sum[3]) + opus_val32(tmp)*opus_val32(y_2)
 	}
-	if func() int64 {
+	if func() int {
 		p := &j
 		x := *p
 		*p++
@@ -124,7 +124,7 @@ func xcorr_kernel_c(x *opus_val16, y *opus_val16, sum [4]opus_val32, len_ int64)
 		sum[2] = (sum[2]) + opus_val32(tmp)*opus_val32(y_2)
 		sum[3] = (sum[3]) + opus_val32(tmp)*opus_val32(y_3)
 	}
-	if func() int64 {
+	if func() int {
 		p := &j
 		x := *p
 		*p++
@@ -166,9 +166,9 @@ func xcorr_kernel_c(x *opus_val16, y *opus_val16, sum [4]opus_val32, len_ int64)
 		sum[3] = (sum[3]) + opus_val32(tmp)*opus_val32(y_1)
 	}
 }
-func dual_inner_prod_c(x *opus_val16, y01 *opus_val16, y02 *opus_val16, N int64, xy1 *opus_val32, xy2 *opus_val32) {
+func dual_inner_prod_c(x *opus_val16, y01 *opus_val16, y02 *opus_val16, N int, xy1 *opus_val32, xy2 *opus_val32) {
 	var (
-		i    int64
+		i    int
 		xy01 opus_val32 = 0
 		xy02 opus_val32 = 0
 	)
@@ -179,9 +179,9 @@ func dual_inner_prod_c(x *opus_val16, y01 *opus_val16, y02 *opus_val16, N int64,
 	*xy1 = xy01
 	*xy2 = xy02
 }
-func celt_inner_prod_c(x *opus_val16, y *opus_val16, N int64) opus_val32 {
+func celt_inner_prod_c(x *opus_val16, y *opus_val16, N int) opus_val32 {
 	var (
-		i  int64
+		i  int
 		xy opus_val32 = 0
 	)
 	for i = 0; i < N; i++ {
@@ -189,10 +189,10 @@ func celt_inner_prod_c(x *opus_val16, y *opus_val16, N int64) opus_val32 {
 	}
 	return xy
 }
-func find_best_pitch(xcorr *opus_val32, y *opus_val16, len_ int64, max_pitch int64, best_pitch *int64) {
+func find_best_pitch(xcorr *opus_val32, y *opus_val16, len_ int, max_pitch int, best_pitch *int) {
 	var (
-		i        int64
-		j        int64
+		i        int
+		j        int
 		Syy      opus_val32 = 1
 		best_num [2]opus_val16
 		best_den [2]opus_val32
@@ -201,13 +201,13 @@ func find_best_pitch(xcorr *opus_val32, y *opus_val16, len_ int64, max_pitch int
 	best_num[1] = opus_val16(-1)
 	best_den[0] = 0
 	best_den[1] = 0
-	*(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*0)) = 0
-	*(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*1)) = 1
+	*(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*0)) = 0
+	*(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*1)) = 1
 	for j = 0; j < len_; j++ {
 		Syy = Syy + opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j))))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j))))
 	}
 	for i = 0; i < max_pitch; i++ {
-		if *(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i))) > 0 {
+		if float32(*(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i)))) > 0 {
 			var (
 				num     opus_val16
 				xcorr16 opus_val32
@@ -219,28 +219,28 @@ func find_best_pitch(xcorr *opus_val32, y *opus_val16, len_ int64, max_pitch int
 				if (num * opus_val16(best_den[0])) > ((best_num[0]) * opus_val16(Syy)) {
 					best_num[1] = best_num[0]
 					best_den[1] = best_den[0]
-					*(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*1)) = *(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*0))
+					*(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*1)) = *(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*0))
 					best_num[0] = num
 					best_den[0] = Syy
-					*(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*0)) = i
+					*(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*0)) = i
 				} else {
 					best_num[1] = num
 					best_den[1] = Syy
-					*(*int64)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int64(0))*1)) = i
+					*(*int)(unsafe.Add(unsafe.Pointer(best_pitch), unsafe.Sizeof(int(0))*1)) = i
 				}
 			}
 		}
 		Syy += (opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+len_)))) * opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i+len_))))) - opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))))
-		if 1 > Syy {
+		if 1 > float32(Syy) {
 			Syy = 1
 		} else {
 			Syy = Syy
 		}
 	}
 }
-func celt_fir5(x *opus_val16, num *opus_val16, N int64) {
+func celt_fir5(x *opus_val16, num *opus_val16, N int) {
 	var (
-		i    int64
+		i    int
 		num0 opus_val16
 		num1 opus_val16
 		num2 opus_val16
@@ -277,24 +277,24 @@ func celt_fir5(x *opus_val16, num *opus_val16, N int64) {
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(sum)
 	}
 }
-func pitch_downsample(x [0]*celt_sig, x_lp *opus_val16, len_ int64, C int64, arch int64) {
+func pitch_downsample(x []*celt_sig, x_lp *opus_val16, len_ int, C int, arch int) {
 	var (
-		i    int64
+		i    int
 		ac   [5]opus_val32
-		tmp  opus_val16 = opus_val16(Q15ONE)
+		tmp  opus_val16 = Q15ONE
 		lpc  [4]opus_val16
 		lpc2 [5]opus_val16
 		c1   opus_val16 = opus_val16(0.8)
 	)
 	for i = 1; i < len_>>1; i++ {
-		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2-1))))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2+1))))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2))))*0.5)
+		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2-1)))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2+1)))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2)))*celt_sig(0.5))
 	}
-	*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*0)) = opus_val16(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*1)))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*0)))*0.5)
+	*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*0)) = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*1))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[0]), unsafe.Sizeof(celt_sig(0))*0))*celt_sig(0.5))
 	if C == 2 {
 		for i = 1; i < len_>>1; i++ {
-			*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*uintptr(i))) += opus_val16(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2-1))))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2+1))))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2))))*0.5)
+			*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*uintptr(i))) += opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2-1)))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2+1)))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*uintptr(i*2)))*celt_sig(0.5))
 		}
-		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*0)) += opus_val16(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*1)))*0.25 + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*0)))*0.5)
+		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*0)) += opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*1))*celt_sig(0.25) + *(*celt_sig)(unsafe.Add(unsafe.Pointer(x[1]), unsafe.Sizeof(celt_sig(0))*0))*celt_sig(0.5))
 	}
 	_celt_autocorr(x_lp, &ac[0], nil, 0, 4, len_>>1, arch)
 	ac[0] *= opus_val32(1.0001)
@@ -303,18 +303,18 @@ func pitch_downsample(x [0]*celt_sig, x_lp *opus_val16, len_ int64, C int64, arc
 	}
 	_celt_lpc(&lpc[0], &ac[0], 4)
 	for i = 0; i < 4; i++ {
-		tmp = opus_val16(float64(tmp) * 0.9)
+		tmp = tmp * opus_val16(0.9)
 		lpc[i] = (lpc[i]) * tmp
 	}
-	lpc2[0] = opus_val16(float64(lpc[0]) + 0.8)
+	lpc2[0] = lpc[0] + opus_val16(0.8)
 	lpc2[1] = lpc[1] + c1*(lpc[0])
 	lpc2[2] = lpc[2] + c1*(lpc[1])
 	lpc2[3] = lpc[3] + c1*(lpc[2])
 	lpc2[4] = c1 * (lpc[3])
 	celt_fir5(x_lp, &lpc2[0], len_>>1)
 }
-func celt_pitch_xcorr_c(_x *opus_val16, _y *opus_val16, xcorr *opus_val32, len_ int64, max_pitch int64, arch int64) {
-	var i int64
+func celt_pitch_xcorr_c(_x *opus_val16, _y *opus_val16, xcorr *opus_val32, len_ int, max_pitch int, arch int) {
+	var i int
 	for i = 0; i < max_pitch-3; i += 4 {
 		var sum [4]opus_val32 = [4]opus_val32{}
 		_ = arch
@@ -333,21 +333,21 @@ func celt_pitch_xcorr_c(_x *opus_val16, _y *opus_val16, xcorr *opus_val32, len_ 
 		*(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = sum
 	}
 }
-func pitch_search(x_lp *opus_val16, y *opus_val16, len_ int64, max_pitch int64, pitch *int64, arch int64) {
+func pitch_search(x_lp *opus_val16, y *opus_val16, len_ int, max_pitch int, pitch *int, arch int) {
 	var (
-		i          int64
-		j          int64
-		lag        int64
-		best_pitch [2]int64 = [2]int64{}
+		i          int
+		j          int
+		lag        int
+		best_pitch [2]int = [2]int{}
 		x_lp4      *opus_val16
 		y_lp4      *opus_val16
 		xcorr      *opus_val32
-		offset     int64
+		offset     int
 	)
 	lag = len_ + max_pitch
-	x_lp4 = (*opus_val16)(libc.Malloc(int((len_ >> 2) * int64(unsafe.Sizeof(opus_val16(0))))))
-	y_lp4 = (*opus_val16)(libc.Malloc(int((lag >> 2) * int64(unsafe.Sizeof(opus_val16(0))))))
-	xcorr = (*opus_val32)(libc.Malloc(int((max_pitch >> 1) * int64(unsafe.Sizeof(opus_val32(0))))))
+	x_lp4 = (*opus_val16)(libc.Malloc((len_ >> 2) * int(unsafe.Sizeof(opus_val16(0)))))
+	y_lp4 = (*opus_val16)(libc.Malloc((lag >> 2) * int(unsafe.Sizeof(opus_val16(0)))))
+	xcorr = (*opus_val32)(libc.Malloc((max_pitch >> 1) * int(unsafe.Sizeof(opus_val32(0)))))
 	for j = 0; j < len_>>2; j++ {
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp4), unsafe.Sizeof(opus_val16(0))*uintptr(j))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(x_lp), unsafe.Sizeof(opus_val16(0))*uintptr(j*2)))
 	}
@@ -359,14 +359,14 @@ func pitch_search(x_lp *opus_val16, y *opus_val16, len_ int64, max_pitch int64, 
 	for i = 0; i < max_pitch>>1; i++ {
 		var sum opus_val32
 		*(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = 0
-		if cmath.Abs(i-best_pitch[0]*2) > 2 && cmath.Abs(i-best_pitch[1]*2) > 2 {
+		if cmath.Abs(int64(i-best_pitch[0]*2)) > 2 && cmath.Abs(int64(i-best_pitch[1]*2)) > 2 {
 			continue
 		}
 		sum = func() opus_val32 {
 			_ = arch
 			return celt_inner_prod_c(x_lp, (*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))), len_>>1)
 		}()
-		if opus_val32(-1) > sum {
+		if float32(-1) > float32(sum) {
 			*(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = opus_val32(-1)
 		} else {
 			*(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = sum
@@ -382,9 +382,9 @@ func pitch_search(x_lp *opus_val16, y *opus_val16, len_ int64, max_pitch int64, 
 		a = *(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(best_pitch[0]-1)))
 		b = *(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(best_pitch[0])))
 		c = *(*opus_val32)(unsafe.Add(unsafe.Pointer(xcorr), unsafe.Sizeof(opus_val32(0))*uintptr(best_pitch[0]+1)))
-		if float64(c-a) > (float64(b-a) * 0.7) {
+		if (c - a) > ((b - a) * opus_val32(0.7)) {
 			offset = 1
-		} else if float64(a-c) > (float64(b-c) * 0.7) {
+		} else if (a - c) > ((b - c) * opus_val32(0.7)) {
 			offset = -1
 		} else {
 			offset = 0
@@ -395,17 +395,17 @@ func pitch_search(x_lp *opus_val16, y *opus_val16, len_ int64, max_pitch int64, 
 	*pitch = best_pitch[0]*2 - offset
 }
 func compute_pitch_gain(xy opus_val32, xx opus_val32, yy opus_val32) opus_val16 {
-	return opus_val16(xy / opus_val32(float32(math.Sqrt(float64(xx*yy+1)))))
+	return opus_val16(xy / opus_val32(float32(math.Sqrt(float64(float32(xx*yy)+1)))))
 }
 
-var second_check [16]int64 = [16]int64{0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2}
+var second_check [16]int = [16]int{0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2}
 
-func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T0_ *int64, prev_period int64, prev_gain opus_val16, arch int64) opus_val16 {
+func remove_doubling(x *opus_val16, maxperiod int, minperiod int, N int, T0_ *int, prev_period int, prev_gain opus_val16, arch int) opus_val16 {
 	var (
-		k          int64
-		i          int64
-		T          int64
-		T0         int64
+		k          int
+		i          int
+		T          int
+		T0         int
 		g          opus_val16
 		g0         opus_val16
 		pg         opus_val16
@@ -416,8 +416,8 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 		xcorr      [3]opus_val32
 		best_xy    opus_val32
 		best_yy    opus_val32
-		offset     int64
-		minperiod0 int64
+		offset     int
+		minperiod0 int
 		yy_lookup  *opus_val32
 	)
 	minperiod0 = minperiod
@@ -430,18 +430,18 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 	if *T0_ >= maxperiod {
 		*T0_ = maxperiod - 1
 	}
-	T = func() int64 {
+	T = func() int {
 		T0 = *T0_
 		return T0
 	}()
-	yy_lookup = (*opus_val32)(libc.Malloc(int((maxperiod + 1) * int64(unsafe.Sizeof(opus_val32(0))))))
+	yy_lookup = (*opus_val32)(libc.Malloc((maxperiod + 1) * int(unsafe.Sizeof(opus_val32(0)))))
 	_ = arch
 	dual_inner_prod_c(x, x, (*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(T0)))), N, &xx, &xy)
 	*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*0)) = xx
 	yy = xx
 	for i = 1; i <= maxperiod; i++ {
 		yy = yy + opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(i)))))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(i))))) - opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(N-i))))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(opus_val16(0))*uintptr(N-i))))
-		if 0 > yy {
+		if 0 > float32(yy) {
 			*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = 0
 		} else {
 			*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(i))) = yy
@@ -456,13 +456,13 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 	}()
 	for k = 2; k <= 15; k++ {
 		var (
-			T1     int64
-			T1b    int64
+			T1     int
+			T1b    int
 			g1     opus_val16
 			cont   opus_val16 = 0
 			thresh opus_val16
 		)
-		T1 = int64(celt_udiv(opus_uint32(T0*2+k), opus_uint32(k*2)))
+		T1 = int(celt_udiv(uint32(int32(T0*2+k)), uint32(int32(k*2))))
 		if T1 < minperiod {
 			break
 		}
@@ -473,36 +473,36 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 				T1b = T0 + T1
 			}
 		} else {
-			T1b = int64(celt_udiv(opus_uint32(second_check[k]*2*T0+k), opus_uint32(k*2)))
+			T1b = int(celt_udiv(uint32(int32(second_check[k]*2*T0+k)), uint32(int32(k*2))))
 		}
 		_ = arch
 		dual_inner_prod_c(x, (*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(T1)))), (*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(T1b)))), N, &xy, &xy2)
-		xy = opus_val32(float64(xy+xy2) * 0.5)
-		yy = opus_val32(float64(*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(T1)))+*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(T1b)))) * 0.5)
+		xy = (xy + xy2) * opus_val32(0.5)
+		yy = (*(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(T1))) + *(*opus_val32)(unsafe.Add(unsafe.Pointer(yy_lookup), unsafe.Sizeof(opus_val32(0))*uintptr(T1b)))) * opus_val32(0.5)
 		g1 = compute_pitch_gain(xy, xx, yy)
-		if cmath.Abs(T1-prev_period) <= 1 {
+		if cmath.Abs(int64(T1-prev_period)) <= 1 {
 			cont = prev_gain
-		} else if cmath.Abs(T1-prev_period) <= 2 && k*5*k < T0 {
-			cont = opus_val16(float64(prev_gain) * 0.5)
+		} else if cmath.Abs(int64(T1-prev_period)) <= 2 && k*5*k < T0 {
+			cont = prev_gain * opus_val16(0.5)
 		} else {
 			cont = 0
 		}
-		if 0.3 > ((float64(g0) * 0.7) - float64(cont)) {
+		if opus_val16(0.3) > ((g0 * opus_val16(0.7)) - cont) {
 			thresh = opus_val16(0.3)
 		} else {
-			thresh = opus_val16((float64(g0) * 0.7) - float64(cont))
+			thresh = (g0 * opus_val16(0.7)) - cont
 		}
 		if T1 < minperiod*3 {
-			if 0.4 > ((float64(g0) * 0.85) - float64(cont)) {
+			if opus_val16(0.4) > ((g0 * opus_val16(0.85)) - cont) {
 				thresh = opus_val16(0.4)
 			} else {
-				thresh = opus_val16((float64(g0) * 0.85) - float64(cont))
+				thresh = (g0 * opus_val16(0.85)) - cont
 			}
 		} else if T1 < minperiod*2 {
-			if 0.5 > ((float64(g0) * 0.9) - float64(cont)) {
+			if opus_val16(0.5) > ((g0 * opus_val16(0.9)) - cont) {
 				thresh = opus_val16(0.5)
 			} else {
-				thresh = opus_val16((float64(g0) * 0.9) - float64(cont))
+				thresh = (g0 * opus_val16(0.9)) - cont
 			}
 		}
 		if g1 > thresh {
@@ -512,15 +512,15 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 			g = g1
 		}
 	}
-	if 0 > best_xy {
+	if 0 > float32(best_xy) {
 		best_xy = 0
 	} else {
 		best_xy = best_xy
 	}
 	if best_yy <= best_xy {
-		pg = opus_val16(Q15ONE)
+		pg = Q15ONE
 	} else {
-		pg = opus_val16(float32(best_xy) / float32(best_yy+1))
+		pg = opus_val16(float32(best_xy) / (float32(best_yy) + 1))
 	}
 	for k = 0; k < 3; k++ {
 		xcorr[k] = func() opus_val32 {
@@ -528,9 +528,9 @@ func remove_doubling(x *opus_val16, maxperiod int64, minperiod int64, N int64, T
 			return celt_inner_prod_c(x, (*opus_val16)(unsafe.Add(unsafe.Pointer(x), -int(unsafe.Sizeof(opus_val16(0))*uintptr(T+k-1)))), N)
 		}()
 	}
-	if float64(xcorr[2]-xcorr[0]) > (float64(xcorr[1]-xcorr[0]) * 0.7) {
+	if (xcorr[2] - xcorr[0]) > ((xcorr[1] - xcorr[0]) * opus_val32(0.7)) {
 		offset = 1
-	} else if float64(xcorr[0]-xcorr[2]) > (float64(xcorr[1]-xcorr[2]) * 0.7) {
+	} else if (xcorr[0] - xcorr[2]) > ((xcorr[1] - xcorr[2]) * opus_val32(0.7)) {
 		offset = -1
 	} else {
 		offset = 0

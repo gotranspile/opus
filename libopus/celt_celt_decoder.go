@@ -12,40 +12,40 @@ const DECODE_BUFFER_SIZE = 2048
 
 type OpusCustomDecoder struct {
 	Mode                  *OpusCustomMode
-	Overlap               int64
-	Channels              int64
-	Stream_channels       int64
-	Downsample            int64
-	Start                 int64
-	End                   int64
-	Signalling            int64
-	Disable_inv           int64
-	Arch                  int64
-	Rng                   opus_uint32
-	Error                 int64
-	Last_pitch_index      int64
-	Loss_duration         int64
-	Skip_plc              int64
-	Postfilter_period     int64
-	Postfilter_period_old int64
+	Overlap               int
+	Channels              int
+	Stream_channels       int
+	Downsample            int
+	Start                 int
+	End                   int
+	Signalling            int
+	Disable_inv           int
+	Arch                  int
+	Rng                   uint32
+	Error                 int
+	Last_pitch_index      int
+	Loss_duration         int
+	Skip_plc              int
+	Postfilter_period     int
+	Postfilter_period_old int
 	Postfilter_gain       opus_val16
 	Postfilter_gain_old   opus_val16
-	Postfilter_tapset     int64
-	Postfilter_tapset_old int64
+	Postfilter_tapset     int
+	Postfilter_tapset_old int
 	Preemph_memD          [2]celt_sig
 	_decode_mem           [1]celt_sig
 }
 
-func celt_decoder_get_size(channels int64) int64 {
+func celt_decoder_get_size(channels int) int {
 	var mode *OpusCustomMode = opus_custom_mode_create(48000, 960, nil)
 	return opus_custom_decoder_get_size(mode, channels)
 }
-func opus_custom_decoder_get_size(mode *OpusCustomMode, channels int64) int64 {
-	var size int64 = (channels*(DECODE_BUFFER_SIZE+mode.Overlap)-1)*int64(unsafe.Sizeof(celt_sig(0))) + int64(unsafe.Sizeof(OpusCustomDecoder{})) + channels*LPC_ORDER*int64(unsafe.Sizeof(opus_val16(0))) + mode.NbEBands*(4*2)*int64(unsafe.Sizeof(opus_val16(0)))
+func opus_custom_decoder_get_size(mode *OpusCustomMode, channels int) int {
+	var size int = (channels*(DECODE_BUFFER_SIZE+mode.Overlap)-1)*int(unsafe.Sizeof(celt_sig(0))) + int(unsafe.Sizeof(OpusCustomDecoder{})) + channels*LPC_ORDER*int(unsafe.Sizeof(opus_val16(0))) + mode.NbEBands*(4*2)*int(unsafe.Sizeof(opus_val16(0)))
 	return size
 }
-func celt_decoder_init(st *OpusCustomDecoder, sampling_rate opus_int32, channels int64) int64 {
-	var ret int64
+func celt_decoder_init(st *OpusCustomDecoder, sampling_rate int32, channels int) int {
+	var ret int
 	ret = opus_custom_decoder_init(st, opus_custom_mode_create(48000, 960, nil), channels)
 	if ret != OPUS_OK {
 		return ret
@@ -57,17 +57,17 @@ func celt_decoder_init(st *OpusCustomDecoder, sampling_rate opus_int32, channels
 		return OPUS_OK
 	}
 }
-func opus_custom_decoder_init(st *OpusCustomDecoder, mode *OpusCustomMode, channels int64) int64 {
+func opus_custom_decoder_init(st *OpusCustomDecoder, mode *OpusCustomMode, channels int) int {
 	if channels < 0 || channels > 2 {
 		return -1
 	}
 	if st == nil {
 		return -7
 	}
-	libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(st))), 0, int(opus_custom_decoder_get_size(mode, channels)*int64(unsafe.Sizeof(byte(0)))))
+	libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(st))), 0, opus_custom_decoder_get_size(mode, channels)*int(unsafe.Sizeof(byte(0))))
 	st.Mode = mode
 	st.Overlap = mode.Overlap
-	st.Stream_channels = func() int64 {
+	st.Stream_channels = func() int {
 		p := &st.Channels
 		st.Channels = channels
 		return *p
@@ -76,18 +76,18 @@ func opus_custom_decoder_init(st *OpusCustomDecoder, mode *OpusCustomMode, chann
 	st.Start = 0
 	st.End = st.Mode.EffEBands
 	st.Signalling = 1
-	st.Disable_inv = int64(libc.BoolToInt(channels == 1))
+	st.Disable_inv = int(libc.BoolToInt(channels == 1))
 	st.Arch = opus_select_arch()
 	opus_custom_decoder_ctl(st, OPUS_RESET_STATE)
 	return OPUS_OK
 }
-func deemphasis_stereo_simple(in [0]*celt_sig, pcm *opus_val16, N int64, coef0 opus_val16, mem *celt_sig) {
+func deemphasis_stereo_simple(in []*celt_sig, pcm *opus_val16, N int, coef0 opus_val16, mem *celt_sig) {
 	var (
 		x0 *celt_sig
 		x1 *celt_sig
 		m0 celt_sig
 		m1 celt_sig
-		j  int64
+		j  int
 	)
 	x0 = in[0]
 	x1 = in[1]
@@ -98,21 +98,21 @@ func deemphasis_stereo_simple(in [0]*celt_sig, pcm *opus_val16, N int64, coef0 o
 			tmp0 celt_sig
 			tmp1 celt_sig
 		)
-		tmp0 = celt_sig(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x0), unsafe.Sizeof(celt_sig(0))*uintptr(j)))) + VERY_SMALL + float64(m0))
-		tmp1 = celt_sig(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x1), unsafe.Sizeof(celt_sig(0))*uintptr(j)))) + VERY_SMALL + float64(m1))
+		tmp0 = *(*celt_sig)(unsafe.Add(unsafe.Pointer(x0), unsafe.Sizeof(celt_sig(0))*uintptr(j))) + VERY_SMALL + m0
+		tmp1 = *(*celt_sig)(unsafe.Add(unsafe.Pointer(x1), unsafe.Sizeof(celt_sig(0))*uintptr(j))) + VERY_SMALL + m1
 		m0 = celt_sig(coef0 * opus_val16(tmp0))
 		m1 = celt_sig(coef0 * opus_val16(tmp1))
-		*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(j*2))) = opus_val16(float64(tmp0) * (1 / CELT_SIG_SCALE))
-		*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(j*2+1))) = opus_val16(float64(tmp1) * (1 / CELT_SIG_SCALE))
+		*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(j*2))) = opus_val16(tmp0 * (1 / CELT_SIG_SCALE))
+		*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(j*2+1))) = opus_val16(tmp1 * (1 / CELT_SIG_SCALE))
 	}
 	*(*celt_sig)(unsafe.Add(unsafe.Pointer(mem), unsafe.Sizeof(celt_sig(0))*0)) = m0
 	*(*celt_sig)(unsafe.Add(unsafe.Pointer(mem), unsafe.Sizeof(celt_sig(0))*1)) = m1
 }
-func deemphasis(in [0]*celt_sig, pcm *opus_val16, N int64, C int64, downsample int64, coef *opus_val16, mem *celt_sig, accum int64) {
+func deemphasis(in []*celt_sig, pcm *opus_val16, N int, C int, downsample int, coef *opus_val16, mem *celt_sig, accum int) {
 	var (
-		c                  int64
-		Nd                 int64
-		apply_downsampling int64 = 0
+		c                  int
+		Nd                 int
+		apply_downsampling int = 0
 		coef0              opus_val16
 		scratch            *celt_sig
 	)
@@ -121,14 +121,14 @@ func deemphasis(in [0]*celt_sig, pcm *opus_val16, N int64, C int64, downsample i
 		return
 	}
 	_ = accum
-	scratch = (*celt_sig)(libc.Malloc(int(N * int64(unsafe.Sizeof(celt_sig(0))))))
+	scratch = (*celt_sig)(libc.Malloc(N * int(unsafe.Sizeof(celt_sig(0)))))
 	coef0 = *(*opus_val16)(unsafe.Add(unsafe.Pointer(coef), unsafe.Sizeof(opus_val16(0))*0))
 	Nd = N / downsample
 	c = 0
 	for {
 		{
 			var (
-				j int64
+				j int
 				x *celt_sig
 				y *opus_val16
 				m celt_sig = *(*celt_sig)(unsafe.Add(unsafe.Pointer(mem), unsafe.Sizeof(celt_sig(0))*uintptr(c)))
@@ -137,26 +137,26 @@ func deemphasis(in [0]*celt_sig, pcm *opus_val16, N int64, C int64, downsample i
 			y = (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(c)))
 			if downsample > 1 {
 				for j = 0; j < N; j++ {
-					var tmp celt_sig = celt_sig(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(celt_sig(0))*uintptr(j)))) + VERY_SMALL + float64(m))
+					var tmp celt_sig = *(*celt_sig)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(celt_sig(0))*uintptr(j))) + VERY_SMALL + m
 					m = celt_sig(coef0 * opus_val16(tmp))
 					*(*celt_sig)(unsafe.Add(unsafe.Pointer(scratch), unsafe.Sizeof(celt_sig(0))*uintptr(j))) = tmp
 				}
 				apply_downsampling = 1
 			} else {
 				for j = 0; j < N; j++ {
-					var tmp celt_sig = celt_sig(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(celt_sig(0))*uintptr(j)))) + VERY_SMALL + float64(m))
+					var tmp celt_sig = *(*celt_sig)(unsafe.Add(unsafe.Pointer(x), unsafe.Sizeof(celt_sig(0))*uintptr(j))) + VERY_SMALL + m
 					m = celt_sig(coef0 * opus_val16(tmp))
-					*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j*C))) = opus_val16(float64(tmp) * (1 / CELT_SIG_SCALE))
+					*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j*C))) = opus_val16(tmp * (1 / CELT_SIG_SCALE))
 				}
 			}
 			*(*celt_sig)(unsafe.Add(unsafe.Pointer(mem), unsafe.Sizeof(celt_sig(0))*uintptr(c))) = m
 			if apply_downsampling != 0 {
 				for j = 0; j < Nd; j++ {
-					*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j*C))) = opus_val16(float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(scratch), unsafe.Sizeof(celt_sig(0))*uintptr(j*downsample)))) * (1 / CELT_SIG_SCALE))
+					*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(j*C))) = opus_val16((*(*celt_sig)(unsafe.Add(unsafe.Pointer(scratch), unsafe.Sizeof(celt_sig(0))*uintptr(j*downsample)))) * (1 / CELT_SIG_SCALE))
 				}
 			}
 		}
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -165,24 +165,24 @@ func deemphasis(in [0]*celt_sig, pcm *opus_val16, N int64, C int64, downsample i
 		}
 	}
 }
-func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, oldBandE *opus_val16, start int64, effEnd int64, C int64, CC int64, isTransient int64, LM int64, downsample int64, silence int64, arch int64) {
+func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn []*celt_sig, oldBandE *opus_val16, start int, effEnd int, C int, CC int, isTransient int, LM int, downsample int, silence int, arch int) {
 	var (
-		c        int64
-		i        int64
-		M        int64
-		b        int64
-		B        int64
-		N        int64
-		NB       int64
-		shift    int64
-		nbEBands int64
-		overlap  int64
+		c        int
+		i        int
+		M        int
+		b        int
+		B        int
+		N        int
+		NB       int
+		shift    int
+		nbEBands int
+		overlap  int
 		freq     *celt_sig
 	)
 	overlap = mode.Overlap
 	nbEBands = mode.NbEBands
 	N = mode.ShortMdctSize << LM
-	freq = (*celt_sig)(libc.Malloc(int(N * int64(unsafe.Sizeof(celt_sig(0))))))
+	freq = (*celt_sig)(libc.Malloc(N * int(unsafe.Sizeof(celt_sig(0)))))
 	M = 1 << LM
 	if isTransient != 0 {
 		B = M
@@ -197,7 +197,7 @@ func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, ol
 		var freq2 *celt_sig
 		denormalise_bands(mode, X, freq, oldBandE, start, effEnd, M, downsample, silence)
 		freq2 = (*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[1]), unsafe.Sizeof(celt_sig(0))*uintptr(overlap/2)))
-		libc.MemCpy(unsafe.Pointer(freq2), unsafe.Pointer(freq), int(N*int64(unsafe.Sizeof(celt_sig(0)))+(int64(uintptr(unsafe.Pointer(freq2))-uintptr(unsafe.Pointer(freq))))*0))
+		libc.MemCpy(unsafe.Pointer(freq2), unsafe.Pointer(freq), N*int(unsafe.Sizeof(celt_sig(0)))+int((int64(uintptr(unsafe.Pointer(freq2))-uintptr(unsafe.Pointer(freq))))*0))
 		for b = 0; b < B; b++ {
 			clt_mdct_backward_c(&mode.Mdct, (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(freq2), unsafe.Sizeof(celt_sig(0))*uintptr(b))))), (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[0]), unsafe.Sizeof(celt_sig(0))*uintptr(NB*b))))), mode.Window, overlap, shift, B, arch)
 		}
@@ -210,7 +210,7 @@ func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, ol
 		denormalise_bands(mode, X, freq, oldBandE, start, effEnd, M, downsample, silence)
 		denormalise_bands(mode, (*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(N))), freq2, (*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands))), start, effEnd, M, downsample, silence)
 		for i = 0; i < N; i++ {
-			*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(i))) = celt_sig((float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(i)))) * 0.5) + float64(*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq2), unsafe.Sizeof(celt_sig(0))*uintptr(i))))*0.5)
+			*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(i))) = ((*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(i)))) * celt_sig(0.5)) + (*(*celt_sig)(unsafe.Add(unsafe.Pointer(freq2), unsafe.Sizeof(celt_sig(0))*uintptr(i))))*celt_sig(0.5)
 		}
 		for b = 0; b < B; b++ {
 			clt_mdct_backward_c(&mode.Mdct, (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(b))))), (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[0]), unsafe.Sizeof(celt_sig(0))*uintptr(NB*b))))), mode.Window, overlap, shift, B, arch)
@@ -222,7 +222,7 @@ func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, ol
 			for b = 0; b < B; b++ {
 				clt_mdct_backward_c(&mode.Mdct, (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(freq), unsafe.Sizeof(celt_sig(0))*uintptr(b))))), (*float32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[c]), unsafe.Sizeof(celt_sig(0))*uintptr(NB*b))))), mode.Window, overlap, shift, B, arch)
 			}
-			if func() int64 {
+			if func() int {
 				p := &c
 				*p++
 				return *p
@@ -236,7 +236,7 @@ func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, ol
 		for i = 0; i < N; i++ {
 			*(*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[c]), unsafe.Sizeof(celt_sig(0))*uintptr(i))) = *(*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[c]), unsafe.Sizeof(celt_sig(0))*uintptr(i)))
 		}
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -245,37 +245,37 @@ func celt_synthesis(mode *OpusCustomMode, X *celt_norm, out_syn [0]*celt_sig, ol
 		}
 	}
 }
-func tf_decode(start int64, end int64, isTransient int64, tf_res *int64, LM int64, dec *ec_dec) {
+func tf_decode(start int, end int, isTransient int, tf_res *int, LM int, dec *ec_dec) {
 	var (
-		i             int64
-		curr          int64
-		tf_select     int64
-		tf_select_rsv int64
-		tf_changed    int64
-		logp          int64
-		budget        opus_uint32
-		tell          opus_uint32
+		i             int
+		curr          int
+		tf_select     int
+		tf_select_rsv int
+		tf_changed    int
+		logp          int
+		budget        uint32
+		tell          uint32
 	)
-	budget = dec.Storage * 8
-	tell = opus_uint32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+	budget = uint32(int32(int(dec.Storage) * 8))
+	tell = uint32(int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec)))))
 	if isTransient != 0 {
 		logp = 2
 	} else {
 		logp = 4
 	}
-	tf_select_rsv = int64(libc.BoolToInt(LM > 0 && tell+opus_uint32(logp)+1 <= budget))
-	budget -= opus_uint32(tf_select_rsv)
-	tf_changed = func() int64 {
+	tf_select_rsv = int(libc.BoolToInt(LM > 0 && int(tell)+logp+1 <= int(budget)))
+	budget -= uint32(int32(tf_select_rsv))
+	tf_changed = func() int {
 		curr = 0
 		return curr
 	}()
 	for i = start; i < end; i++ {
-		if tell+opus_uint32(logp) <= budget {
-			curr ^= ec_dec_bit_logp(dec, uint64(logp))
-			tell = opus_uint32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+		if int(tell)+logp <= int(budget) {
+			curr ^= ec_dec_bit_logp(dec, uint(logp))
+			tell = uint32(int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec)))))
 			tf_changed |= curr
 		}
-		*(*int64)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int64(0))*uintptr(i))) = curr
+		*(*int)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int(0))*uintptr(i))) = curr
 		if isTransient != 0 {
 			logp = 4
 		} else {
@@ -283,29 +283,29 @@ func tf_decode(start int64, end int64, isTransient int64, tf_res *int64, LM int6
 		}
 	}
 	tf_select = 0
-	if tf_select_rsv != 0 && int64(tf_select_table[LM][isTransient*4+0+tf_changed]) != int64(tf_select_table[LM][isTransient*4+2+tf_changed]) {
+	if tf_select_rsv != 0 && int(tf_select_table[LM][isTransient*4+0+tf_changed]) != int(tf_select_table[LM][isTransient*4+2+tf_changed]) {
 		tf_select = ec_dec_bit_logp(dec, 1)
 	}
 	for i = start; i < end; i++ {
-		*(*int64)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int64(0))*uintptr(i))) = int64(tf_select_table[LM][isTransient*4+tf_select*2+*(*int64)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int64(0))*uintptr(i)))])
+		*(*int)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int(0))*uintptr(i))) = int(tf_select_table[LM][isTransient*4+tf_select*2+*(*int)(unsafe.Add(unsafe.Pointer(tf_res), unsafe.Sizeof(int(0))*uintptr(i)))])
 	}
 }
-func celt_plc_pitch_search(decode_mem [2]*celt_sig, C int64, arch int64) int64 {
+func celt_plc_pitch_search(decode_mem [2]*celt_sig, C int, arch int) int {
 	var (
-		pitch_index  int64
+		pitch_index  int
 		lp_pitch_buf *opus_val16
 	)
-	lp_pitch_buf = (*opus_val16)(libc.Malloc(int(uintptr(DECODE_BUFFER_SIZE>>1) * unsafe.Sizeof(opus_val16(0)))))
+	lp_pitch_buf = (*opus_val16)(libc.Malloc((int(DECODE_BUFFER_SIZE >> 1)) * int(unsafe.Sizeof(opus_val16(0)))))
 	pitch_downsample(decode_mem[:], lp_pitch_buf, DECODE_BUFFER_SIZE, C, arch)
-	pitch_search((*opus_val16)(unsafe.Add(unsafe.Pointer(lp_pitch_buf), unsafe.Sizeof(opus_val16(0))*(720>>1))), lp_pitch_buf, DECODE_BUFFER_SIZE-720, 720-100, &pitch_index, arch)
+	pitch_search((*opus_val16)(unsafe.Add(unsafe.Pointer(lp_pitch_buf), unsafe.Sizeof(opus_val16(0))*(720>>1))), lp_pitch_buf, int(DECODE_BUFFER_SIZE-720), 720-100, &pitch_index, arch)
 	pitch_index = 720 - pitch_index
 	return pitch_index
 }
-func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
+func celt_decode_lost(st *OpusCustomDecoder, N int, LM int) {
 	var (
-		c              int64
-		i              int64
-		C              int64 = st.Channels
+		c              int
+		i              int
+		C              int = st.Channels
 		decode_mem     [2]*celt_sig
 		out_syn        [2]*celt_sig
 		lpc            *opus_val16
@@ -314,12 +314,12 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 		oldLogE2       *opus_val16
 		backgroundLogE *opus_val16
 		mode           *OpusCustomMode
-		nbEBands       int64
-		overlap        int64
-		start          int64
-		loss_duration  int64
-		noise_based    int64
-		eBands         *opus_int16
+		nbEBands       int
+		overlap        int
+		start          int
+		loss_duration  int
+		noise_based    int
+		eBands         *int16
 	)
 	mode = st.Mode
 	nbEBands = mode.NbEBands
@@ -329,7 +329,7 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 	for {
 		decode_mem[c] = &st._decode_mem[c*(DECODE_BUFFER_SIZE+overlap)]
 		out_syn[c] = (*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N))))
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -344,17 +344,17 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 	backgroundLogE = (*opus_val16)(unsafe.Add(unsafe.Pointer(oldLogE2), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands*2)))
 	loss_duration = st.Loss_duration
 	start = st.Start
-	noise_based = int64(libc.BoolToInt(loss_duration >= 40 || start != 0 || st.Skip_plc != 0))
+	noise_based = int(libc.BoolToInt(loss_duration >= 40 || start != 0 || st.Skip_plc != 0))
 	if noise_based != 0 {
 		var (
 			X      *celt_norm
-			seed   opus_uint32
-			end    int64
-			effEnd int64
+			seed   uint32
+			end    int
+			effEnd int
 			decay  opus_val16
 		)
 		end = st.End
-		if start > (func() int64 {
+		if start > (func() int {
 			if end < mode.EffEBands {
 				return end
 			}
@@ -366,11 +366,11 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 		} else {
 			effEnd = mode.EffEBands
 		}
-		X = (*celt_norm)(libc.Malloc(int((C * N) * int64(unsafe.Sizeof(celt_norm(0))))))
+		X = (*celt_norm)(libc.Malloc((C * N) * int(unsafe.Sizeof(celt_norm(0)))))
 		c = 0
 		for {
-			libc.MemMove(unsafe.Pointer(decode_mem[c]), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), int((DECODE_BUFFER_SIZE-N+(overlap>>1))*int64(unsafe.Sizeof(celt_sig(0)))+(int64(uintptr(unsafe.Pointer(decode_mem[c]))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
-			if func() int64 {
+			libc.MemMove(unsafe.Pointer(decode_mem[c]), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), (DECODE_BUFFER_SIZE-N+(overlap>>1))*int(unsafe.Sizeof(celt_sig(0)))+int((int64(uintptr(unsafe.Pointer(decode_mem[c]))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
+			if func() int {
 				p := &c
 				*p++
 				return *p
@@ -392,7 +392,7 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 					*(*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(c*nbEBands+i))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(c*nbEBands+i))) - decay
 				}
 			}
-			if func() int64 {
+			if func() int {
 				p := &c
 				*p++
 				return *p
@@ -404,34 +404,34 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 		for c = 0; c < C; c++ {
 			for i = start; i < effEnd; i++ {
 				var (
-					j     int64
-					boffs int64
-					blen  int64
+					j     int
+					boffs int
+					blen  int
 				)
-				boffs = N*c + (int64(*(*opus_int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(opus_int16(0))*uintptr(i)))) << LM)
-				blen = int64(*(*opus_int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(opus_int16(0))*uintptr(i+1)))-*(*opus_int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(opus_int16(0))*uintptr(i)))) << LM
+				boffs = N*c + (int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i)))) << LM)
+				blen = (int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i+1)))) - int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))) << LM
 				for j = 0; j < blen; j++ {
 					seed = celt_lcg_rand(seed)
-					*(*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(boffs+j))) = celt_norm(opus_int32(seed) >> 20)
+					*(*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(boffs+j))) = celt_norm(int(int32(seed)) >> 20)
 				}
-				renormalise_vector((*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(boffs))), blen, opus_val16(Q15ONE), st.Arch)
+				renormalise_vector((*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(boffs))), blen, Q15ONE, st.Arch)
 			}
 		}
 		st.Rng = seed
 		celt_synthesis(mode, X, out_syn[:], oldBandE, start, effEnd, C, C, 0, LM, st.Downsample, 0, st.Arch)
 	} else {
 		var (
-			exc_length  int64
+			exc_length  int
 			window      *opus_val16
 			exc         *opus_val16
-			fade        opus_val16 = opus_val16(Q15ONE)
-			pitch_index int64
+			fade        opus_val16 = Q15ONE
+			pitch_index int
 			etmp        *opus_val32
 			_exc        *opus_val16
 			fir_tmp     *opus_val16
 		)
 		if loss_duration == 0 {
-			st.Last_pitch_index = func() int64 {
+			st.Last_pitch_index = func() int {
 				pitch_index = celt_plc_pitch_search(decode_mem, C, st.Arch)
 				return pitch_index
 			}()
@@ -444,9 +444,9 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 		} else {
 			exc_length = MAX_PERIOD
 		}
-		etmp = (*opus_val32)(libc.Malloc(int(overlap * int64(unsafe.Sizeof(opus_val32(0))))))
-		_exc = (*opus_val16)(libc.Malloc(int(uintptr(MAX_PERIOD+LPC_ORDER) * unsafe.Sizeof(opus_val16(0)))))
-		fir_tmp = (*opus_val16)(libc.Malloc(int(exc_length * int64(unsafe.Sizeof(opus_val16(0))))))
+		etmp = (*opus_val32)(libc.Malloc(overlap * int(unsafe.Sizeof(opus_val32(0)))))
+		_exc = (*opus_val16)(libc.Malloc((int(MAX_PERIOD + LPC_ORDER)) * int(unsafe.Sizeof(opus_val16(0)))))
+		fir_tmp = (*opus_val16)(libc.Malloc(exc_length * int(unsafe.Sizeof(opus_val16(0)))))
 		exc = (*opus_val16)(unsafe.Add(unsafe.Pointer(_exc), unsafe.Sizeof(opus_val16(0))*uintptr(LPC_ORDER)))
 		window = mode.Window
 		c = 0
@@ -457,32 +457,32 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 					attenuation          opus_val16
 					S1                   opus_val32 = 0
 					buf                  *celt_sig
-					extrapolation_offset int64
-					extrapolation_len    int64
-					j                    int64
+					extrapolation_offset int
+					extrapolation_len    int
+					j                    int
 				)
 				buf = decode_mem[c]
-				for i = 0; i < MAX_PERIOD+LPC_ORDER; i++ {
-					*(*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(i-LPC_ORDER))) = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-MAX_PERIOD-LPC_ORDER+i))))
+				for i = 0; i < int(MAX_PERIOD+LPC_ORDER); i++ {
+					*(*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(i-LPC_ORDER))) = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(int(DECODE_BUFFER_SIZE-MAX_PERIOD)-LPC_ORDER+i))))
 				}
 				if loss_duration == 0 {
 					var ac [25]opus_val32
 					_celt_autocorr(exc, &ac[0], window, overlap, LPC_ORDER, MAX_PERIOD, st.Arch)
 					ac[0] *= opus_val32(1.0001)
 					for i = 1; i <= LPC_ORDER; i++ {
-						ac[i] -= opus_val32(float64(ac[i]) * (0.008 * 0.008) * float64(i) * float64(i))
+						ac[i] -= opus_val32(float32(ac[i]*(0.008*0.008)) * float32(i) * float32(i))
 					}
 					_celt_lpc((*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER))), &ac[0], LPC_ORDER)
 				}
 				{
 					celt_fir_c((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length)))), (*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER))), fir_tmp, exc_length, LPC_ORDER, st.Arch)
-					libc.MemCpy(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))), unsafe.Pointer(fir_tmp), int(exc_length*int64(unsafe.Sizeof(opus_val16(0)))+(int64(uintptr(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))))-uintptr(unsafe.Pointer(fir_tmp))))*0))
+					libc.MemCpy(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))), unsafe.Pointer(fir_tmp), exc_length*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))))-uintptr(unsafe.Pointer(fir_tmp))))*0))
 				}
 				{
 					var (
 						E1           opus_val32 = 1
 						E2           opus_val32 = 1
-						decay_length int64
+						decay_length int
 					)
 					decay_length = exc_length >> 1
 					for i = 0; i < decay_length; i++ {
@@ -499,16 +499,16 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 					}
 					decay = opus_val16(float32(math.Sqrt(float64(float32(E1) / float32(E2)))))
 				}
-				libc.MemMove(unsafe.Pointer(buf), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), int((DECODE_BUFFER_SIZE-N)*int64(unsafe.Sizeof(celt_sig(0)))+(int64(uintptr(unsafe.Pointer(buf))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
+				libc.MemMove(unsafe.Pointer(buf), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), (DECODE_BUFFER_SIZE-N)*int(unsafe.Sizeof(celt_sig(0)))+int((int64(uintptr(unsafe.Pointer(buf))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
 				extrapolation_offset = MAX_PERIOD - pitch_index
 				extrapolation_len = N + overlap
 				attenuation = fade * decay
-				for i = func() int64 {
+				for i = func() int {
 					j = 0
 					return j
-				}(); i < extrapolation_len; func() int64 {
+				}(); i < extrapolation_len; func() int {
 					i++
-					return func() int64 {
+					return func() int {
 						p := &j
 						x := *p
 						*p++
@@ -521,7 +521,7 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 						attenuation = attenuation * decay
 					}
 					*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N+i))) = celt_sig(attenuation * (*(*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(extrapolation_offset+j)))))
-					tmp = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-MAX_PERIOD-N+extrapolation_offset+j))))
+					tmp = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(int(DECODE_BUFFER_SIZE-MAX_PERIOD)-N+extrapolation_offset+j))))
 					S1 += opus_val32(tmp) * opus_val32(tmp)
 				}
 				{
@@ -537,14 +537,14 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 						var tmp opus_val16 = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N+i))))
 						S2 += opus_val32(tmp) * opus_val32(tmp)
 					}
-					if float64(S1) <= float64(S2)*0.2 {
+					if S1 <= S2*opus_val32(0.2) {
 						for i = 0; i < extrapolation_len; i++ {
 							*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N+i))) = 0
 						}
 					} else if S1 < S2 {
-						var ratio opus_val16 = opus_val16(float32(math.Sqrt(float64(float32(S1+1) / float32(S2+1)))))
+						var ratio opus_val16 = opus_val16(float32(math.Sqrt(float64((float32(S1) + 1) / (float32(S2) + 1)))))
 						for i = 0; i < overlap; i++ {
-							var tmp_g opus_val16 = opus_val16(Q15ONE - float64(*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(i))))*(Q15ONE-float64(ratio)))
+							var tmp_g opus_val16 = Q15ONE - (*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(i))))*(Q15ONE-ratio)
 							*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N+i))) = celt_sig(tmp_g * opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N+i)))))
 						}
 						for i = overlap; i < extrapolation_len; i++ {
@@ -557,7 +557,7 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 					*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE+i))) = celt_sig(((*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(i)))) * opus_val16(*(*opus_val32)(unsafe.Add(unsafe.Pointer(etmp), unsafe.Sizeof(opus_val32(0))*uintptr(overlap-1-i))))) + (*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(overlap-i-1))))*opus_val16(*(*opus_val32)(unsafe.Add(unsafe.Pointer(etmp), unsafe.Sizeof(opus_val32(0))*uintptr(i)))))
 				}
 			}
-			if func() int64 {
+			if func() int {
 				p := &c
 				*p++
 				return *p
@@ -572,21 +572,21 @@ func celt_decode_lost(st *OpusCustomDecoder, N int64, LM int64) {
 		st.Loss_duration = loss_duration + (1 << LM)
 	}
 }
-func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *opus_val16, frame_size int64, dec *ec_dec, accum int64) int64 {
+func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int, pcm *opus_val16, frame_size int, dec *ec_dec, accum int) int {
 	var (
-		c                       int64
-		i                       int64
-		N                       int64
-		spread_decision         int64
-		bits                    opus_int32
+		c                       int
+		i                       int
+		N                       int
+		spread_decision         int
+		bits                    int32
 		_dec                    ec_dec
 		X                       *celt_norm
-		fine_quant              *int64
-		pulses                  *int64
-		cap_                    *int64
-		offsets                 *int64
-		fine_priority           *int64
-		tf_res                  *int64
+		fine_quant              *int
+		pulses                  *int
+		cap_                    *int
+		offsets                 *int
+		fine_priority           *int
+		tf_res                  *int
 		collapse_masks          *uint8
 		decode_mem              [2]*celt_sig
 		out_syn                 [2]*celt_sig
@@ -595,34 +595,34 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 		oldLogE                 *opus_val16
 		oldLogE2                *opus_val16
 		backgroundLogE          *opus_val16
-		shortBlocks             int64
-		isTransient             int64
-		intra_ener              int64
-		CC                      int64 = st.Channels
-		LM                      int64
-		M                       int64
-		start                   int64
-		end                     int64
-		effEnd                  int64
-		codedBands              int64
-		alloc_trim              int64
-		postfilter_pitch        int64
+		shortBlocks             int
+		isTransient             int
+		intra_ener              int
+		CC                      int = st.Channels
+		LM                      int
+		M                       int
+		start                   int
+		end                     int
+		effEnd                  int
+		codedBands              int
+		alloc_trim              int
+		postfilter_pitch        int
 		postfilter_gain         opus_val16
-		intensity               int64 = 0
-		dual_stereo             int64 = 0
-		total_bits              opus_int32
-		balance                 opus_int32
-		tell                    opus_int32
-		dynalloc_logp           int64
-		postfilter_tapset       int64
-		anti_collapse_rsv       int64
-		anti_collapse_on        int64 = 0
-		silence                 int64
-		C                       int64 = st.Stream_channels
+		intensity               int = 0
+		dual_stereo             int = 0
+		total_bits              int32
+		balance                 int32
+		tell                    int32
+		dynalloc_logp           int
+		postfilter_tapset       int
+		anti_collapse_rsv       int
+		anti_collapse_on        int = 0
+		silence                 int
+		C                       int = st.Stream_channels
 		mode                    *OpusCustomMode
-		nbEBands                int64
-		overlap                 int64
-		eBands                  *opus_int16
+		nbEBands                int
+		overlap                 int
+		eBands                  *int16
 		max_background_increase opus_val16
 	)
 	mode = st.Mode
@@ -656,7 +656,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 	for {
 		decode_mem[c] = &st._decode_mem[c*(DECODE_BUFFER_SIZE+overlap)]
 		out_syn[c] = (*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N))))
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -673,9 +673,9 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 		deemphasis(out_syn[:], pcm, N, CC, st.Downsample, &mode.Preemph[0], &st.Preemph_memD[0], accum)
 		return frame_size / st.Downsample
 	}
-	st.Skip_plc = int64(libc.BoolToInt(st.Loss_duration != 0))
+	st.Skip_plc = int(libc.BoolToInt(st.Loss_duration != 0))
 	if dec == nil {
-		ec_dec_init(&_dec, data, opus_uint32(len_))
+		ec_dec_init(&_dec, data, uint32(int32(len_)))
 		dec = &_dec
 	}
 	if C == 1 {
@@ -687,41 +687,41 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 			}
 		}
 	}
-	total_bits = opus_int32(len_ * 8)
-	tell = opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
-	if tell >= total_bits {
+	total_bits = int32(len_ * 8)
+	tell = int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+	if int(tell) >= int(total_bits) {
 		silence = 1
-	} else if tell == 1 {
+	} else if int(tell) == 1 {
 		silence = ec_dec_bit_logp(dec, 15)
 	} else {
 		silence = 0
 	}
 	if silence != 0 {
-		tell = opus_int32(len_ * 8)
-		dec.Nbits_total += int64(tell - opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec)))))
+		tell = int32(len_ * 8)
+		dec.Nbits_total += int(tell) - ec_tell((*ec_ctx)(unsafe.Pointer(dec)))
 	}
 	postfilter_gain = 0
 	postfilter_pitch = 0
 	postfilter_tapset = 0
-	if start == 0 && tell+16 <= total_bits {
+	if start == 0 && int(tell)+16 <= int(total_bits) {
 		if ec_dec_bit_logp(dec, 1) != 0 {
 			var (
-				qg     int64
-				octave int64
+				qg     int
+				octave int
 			)
-			octave = int64(ec_dec_uint(dec, 6))
-			postfilter_pitch = (16 << octave) + int64(ec_dec_bits(dec, uint64(octave+4))) - 1
-			qg = int64(ec_dec_bits(dec, 3))
-			if ec_tell((*ec_ctx)(unsafe.Pointer(dec)))+2 <= int64(total_bits) {
+			octave = int(ec_dec_uint(dec, 6))
+			postfilter_pitch = (16 << octave) + int(ec_dec_bits(dec, uint(octave+4))) - 1
+			qg = int(ec_dec_bits(dec, 3))
+			if ec_tell((*ec_ctx)(unsafe.Pointer(dec)))+2 <= int(total_bits) {
 				postfilter_tapset = ec_dec_icdf(dec, &tapset_icdf[0], 2)
 			}
 			postfilter_gain = opus_val16(float64(qg+1) * 0.09375)
 		}
-		tell = opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+		tell = int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
 	}
-	if LM > 0 && tell+3 <= total_bits {
+	if LM > 0 && int(tell)+3 <= int(total_bits) {
 		isTransient = ec_dec_bit_logp(dec, 3)
-		tell = opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+		tell = int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
 	} else {
 		isTransient = 0
 	}
@@ -730,59 +730,59 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 	} else {
 		shortBlocks = 0
 	}
-	if tell+3 <= total_bits {
+	if int(tell)+3 <= int(total_bits) {
 		intra_ener = ec_dec_bit_logp(dec, 3)
 	} else {
 		intra_ener = 0
 	}
 	unquant_coarse_energy(mode, start, end, oldBandE, intra_ener, dec, C, LM)
-	tf_res = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
+	tf_res = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	tf_decode(start, end, isTransient, tf_res, LM, dec)
-	tell = opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
+	tell = int32(ec_tell((*ec_ctx)(unsafe.Pointer(dec))))
 	spread_decision = 2
-	if tell+4 <= total_bits {
+	if int(tell)+4 <= int(total_bits) {
 		spread_decision = ec_dec_icdf(dec, &spread_icdf[0], 5)
 	}
-	cap_ = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
+	cap_ = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	init_caps(mode, cap_, LM, C)
-	offsets = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
+	offsets = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	dynalloc_logp = 6
 	total_bits <<= BITRES
-	tell = opus_int32(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec))))
+	tell = int32(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec))))
 	for i = start; i < end; i++ {
 		var (
-			width              int64
-			quanta             int64
-			dynalloc_loop_logp int64
-			boost              int64
+			width              int
+			quanta             int
+			dynalloc_loop_logp int
+			boost              int
 		)
-		width = C * int64(*(*opus_int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(opus_int16(0))*uintptr(i+1)))-*(*opus_int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(opus_int16(0))*uintptr(i)))) << LM
-		if (width << BITRES) < (func() int64 {
-			if (6 << BITRES) > width {
-				return 6 << BITRES
+		width = C * (int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i+1)))) - int(*(*int16)(unsafe.Add(unsafe.Pointer(eBands), unsafe.Sizeof(int16(0))*uintptr(i))))) << LM
+		if (width << BITRES) < (func() int {
+			if (int(6 << BITRES)) > width {
+				return int(6 << BITRES)
 			}
 			return width
 		}()) {
 			quanta = width << BITRES
-		} else if (6 << BITRES) > width {
-			quanta = 6 << BITRES
+		} else if (int(6 << BITRES)) > width {
+			quanta = int(6 << BITRES)
 		} else {
 			quanta = width
 		}
 		dynalloc_loop_logp = dynalloc_logp
 		boost = 0
-		for tell+opus_int32(dynalloc_loop_logp<<BITRES) < total_bits && boost < *(*int64)(unsafe.Add(unsafe.Pointer(cap_), unsafe.Sizeof(int64(0))*uintptr(i))) {
-			var flag int64
-			flag = ec_dec_bit_logp(dec, uint64(dynalloc_loop_logp))
-			tell = opus_int32(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec))))
+		for int(tell)+(dynalloc_loop_logp<<BITRES) < int(total_bits) && boost < *(*int)(unsafe.Add(unsafe.Pointer(cap_), unsafe.Sizeof(int(0))*uintptr(i))) {
+			var flag int
+			flag = ec_dec_bit_logp(dec, uint(dynalloc_loop_logp))
+			tell = int32(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec))))
 			if flag == 0 {
 				break
 			}
 			boost += quanta
-			total_bits -= opus_int32(quanta)
+			total_bits -= int32(quanta)
 			dynalloc_loop_logp = 1
 		}
-		*(*int64)(unsafe.Add(unsafe.Pointer(offsets), unsafe.Sizeof(int64(0))*uintptr(i))) = boost
+		*(*int)(unsafe.Add(unsafe.Pointer(offsets), unsafe.Sizeof(int(0))*uintptr(i))) = boost
 		if boost > 0 {
 			if 2 > (dynalloc_logp - 1) {
 				dynalloc_logp = 2
@@ -791,27 +791,27 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 			}
 		}
 	}
-	fine_quant = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
-	if tell+opus_int32(6<<BITRES) <= total_bits {
+	fine_quant = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
+	if int(tell)+(int(6<<BITRES)) <= int(total_bits) {
 		alloc_trim = ec_dec_icdf(dec, &trim_icdf[0], 7)
 	} else {
 		alloc_trim = 5
 	}
-	bits = ((opus_int32(len_) * 8) << BITRES) - opus_int32(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec)))) - 1
-	if isTransient != 0 && LM >= 2 && bits >= opus_int32((LM+2)<<BITRES) {
-		anti_collapse_rsv = 1 << BITRES
+	bits = int32(((int(int32(len_)) * 8) << BITRES) - int(ec_tell_frac((*ec_ctx)(unsafe.Pointer(dec)))) - 1)
+	if isTransient != 0 && LM >= 2 && int(bits) >= ((LM+2)<<BITRES) {
+		anti_collapse_rsv = int(1 << BITRES)
 	} else {
 		anti_collapse_rsv = 0
 	}
-	bits -= opus_int32(anti_collapse_rsv)
-	pulses = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
-	fine_priority = (*int64)(libc.Malloc(int(nbEBands * int64(unsafe.Sizeof(int64(0))))))
+	bits -= int32(anti_collapse_rsv)
+	pulses = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
+	fine_priority = (*int)(libc.Malloc(nbEBands * int(unsafe.Sizeof(int(0)))))
 	codedBands = clt_compute_allocation(mode, start, end, offsets, cap_, alloc_trim, &intensity, &dual_stereo, bits, &balance, pulses, fine_quant, fine_priority, C, LM, (*ec_ctx)(unsafe.Pointer(dec)), 0, 0, 0)
 	unquant_fine_energy(mode, start, end, oldBandE, fine_quant, dec, C)
 	c = 0
 	for {
-		libc.MemMove(unsafe.Pointer(decode_mem[c]), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), int((DECODE_BUFFER_SIZE-N+overlap/2)*int64(unsafe.Sizeof(celt_sig(0)))+(int64(uintptr(unsafe.Pointer(decode_mem[c]))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
-		if func() int64 {
+		libc.MemMove(unsafe.Pointer(decode_mem[c]), unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))), (DECODE_BUFFER_SIZE-N+overlap/2)*int(unsafe.Sizeof(celt_sig(0)))+int((int64(uintptr(unsafe.Pointer(decode_mem[c]))-uintptr(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(decode_mem[c]), unsafe.Sizeof(celt_sig(0))*uintptr(N)))))))*0))
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -819,16 +819,16 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 			break
 		}
 	}
-	collapse_masks = (*uint8)(libc.Malloc(int((C * nbEBands) * int64(unsafe.Sizeof(uint8(0))))))
-	X = (*celt_norm)(libc.Malloc(int((C * N) * int64(unsafe.Sizeof(celt_norm(0))))))
+	collapse_masks = (*uint8)(libc.Malloc((C * nbEBands) * int(unsafe.Sizeof(uint8(0)))))
+	X = (*celt_norm)(libc.Malloc((C * N) * int(unsafe.Sizeof(celt_norm(0)))))
 	quant_all_bands(0, mode, start, end, X, func() *celt_norm {
 		if C == 2 {
 			return (*celt_norm)(unsafe.Add(unsafe.Pointer(X), unsafe.Sizeof(celt_norm(0))*uintptr(N)))
 		}
 		return nil
-	}(), collapse_masks, nil, pulses, shortBlocks, spread_decision, dual_stereo, intensity, tf_res, opus_int32(len_*(8<<BITRES)-anti_collapse_rsv), balance, (*ec_ctx)(unsafe.Pointer(dec)), LM, codedBands, &st.Rng, 0, st.Arch, st.Disable_inv)
+	}(), collapse_masks, nil, pulses, shortBlocks, spread_decision, dual_stereo, intensity, tf_res, int32(len_*(int(8<<BITRES))-anti_collapse_rsv), balance, (*ec_ctx)(unsafe.Pointer(dec)), LM, codedBands, &st.Rng, 0, st.Arch, st.Disable_inv)
 	if anti_collapse_rsv > 0 {
-		anti_collapse_on = int64(ec_dec_bits(dec, 1))
+		anti_collapse_on = int(ec_dec_bits(dec, 1))
 	}
 	unquant_energy_finalise(mode, start, end, oldBandE, fine_quant, fine_priority, len_*8-ec_tell((*ec_ctx)(unsafe.Pointer(dec))), dec, C)
 	if anti_collapse_on != 0 {
@@ -856,7 +856,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 		if LM != 0 {
 			comb_filter((*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[c]), unsafe.Sizeof(celt_sig(0))*uintptr(mode.ShortMdctSize))))), (*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(out_syn[c]), unsafe.Sizeof(celt_sig(0))*uintptr(mode.ShortMdctSize))))), st.Postfilter_period, postfilter_pitch, N-mode.ShortMdctSize, st.Postfilter_gain, postfilter_gain, st.Postfilter_tapset, postfilter_tapset, mode.Window, overlap, st.Arch)
 		}
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -876,11 +876,11 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 		st.Postfilter_tapset_old = st.Postfilter_tapset
 	}
 	if C == 1 {
-		libc.MemCpy(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands)))), unsafe.Pointer(oldBandE), int(nbEBands*int64(unsafe.Sizeof(opus_val16(0)))+(int64(uintptr(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands)))))-uintptr(unsafe.Pointer(oldBandE))))*0))
+		libc.MemCpy(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands)))), unsafe.Pointer(oldBandE), nbEBands*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(nbEBands)))))-uintptr(unsafe.Pointer(oldBandE))))*0))
 	}
 	if isTransient == 0 {
-		libc.MemCpy(unsafe.Pointer(oldLogE2), unsafe.Pointer(oldLogE), int((nbEBands*2)*int64(unsafe.Sizeof(opus_val16(0)))+(int64(uintptr(unsafe.Pointer(oldLogE2))-uintptr(unsafe.Pointer(oldLogE))))*0))
-		libc.MemCpy(unsafe.Pointer(oldLogE), unsafe.Pointer(oldBandE), int((nbEBands*2)*int64(unsafe.Sizeof(opus_val16(0)))+(int64(uintptr(unsafe.Pointer(oldLogE))-uintptr(unsafe.Pointer(oldBandE))))*0))
+		libc.MemCpy(unsafe.Pointer(oldLogE2), unsafe.Pointer(oldLogE), (nbEBands*2)*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer(oldLogE2))-uintptr(unsafe.Pointer(oldLogE))))*0))
+		libc.MemCpy(unsafe.Pointer(oldLogE), unsafe.Pointer(oldBandE), (nbEBands*2)*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer(oldLogE))-uintptr(unsafe.Pointer(oldBandE))))*0))
 	} else {
 		for i = 0; i < nbEBands*2; i++ {
 			if (*(*opus_val16)(unsafe.Add(unsafe.Pointer(oldLogE), unsafe.Sizeof(opus_val16(0))*uintptr(i)))) < (*(*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(i)))) {
@@ -890,7 +890,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 			}
 		}
 	}
-	max_background_increase = opus_val16(float64(func() int64 {
+	max_background_increase = opus_val16(float64(func() int {
 		if 160 < (st.Loss_duration + M) {
 			return 160
 		}
@@ -921,7 +921,7 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 				return *p
 			}()
 		}
-		if func() int64 {
+		if func() int {
 			p := &c
 			*p++
 			return *p
@@ -940,44 +940,44 @@ func celt_decode_with_ec(st *OpusCustomDecoder, data *uint8, len_ int64, pcm *op
 	}
 	return frame_size / st.Downsample
 }
-func opus_custom_decoder_ctl(st *OpusCustomDecoder, request int64, _rest ...interface{}) int64 {
+func opus_custom_decoder_ctl(st *OpusCustomDecoder, request int, _rest ...interface{}) int {
 	var ap libc.ArgList
 	ap.Start(request, _rest)
 	switch request {
 	case CELT_SET_START_BAND_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < 0 || value >= opus_int32(st.Mode.NbEBands) {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < 0 || int(value) >= st.Mode.NbEBands {
 			goto bad_arg
 		}
-		st.Start = int64(value)
+		st.Start = int(value)
 	case CELT_SET_END_BAND_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < 1 || value > opus_int32(st.Mode.NbEBands) {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < 1 || int(value) > st.Mode.NbEBands {
 			goto bad_arg
 		}
-		st.End = int64(value)
+		st.End = int(value)
 	case CELT_SET_CHANNELS_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < 1 || value > 2 {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < 1 || int(value) > 2 {
 			goto bad_arg
 		}
-		st.Stream_channels = int64(value)
+		st.Stream_channels = int(value)
 	case CELT_GET_AND_CLEAR_ERROR_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Error)
+		*value = int32(st.Error)
 		st.Error = 0
 	case OPUS_GET_LOOKAHEAD_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Overlap / st.Downsample)
+		*value = int32(st.Overlap / st.Downsample)
 	case OPUS_RESET_STATE:
 		var (
-			i        int64
+			i        int
 			lpc      *opus_val16
 			oldBandE *opus_val16
 			oldLogE  *opus_val16
@@ -987,7 +987,7 @@ func opus_custom_decoder_ctl(st *OpusCustomDecoder, request int64, _rest ...inte
 		oldBandE = (*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*LPC_ORDER)))
 		oldLogE = (*opus_val16)(unsafe.Add(unsafe.Pointer(oldBandE), unsafe.Sizeof(opus_val16(0))*uintptr(st.Mode.NbEBands*2)))
 		oldLogE2 = (*opus_val16)(unsafe.Add(unsafe.Pointer(oldLogE), unsafe.Sizeof(opus_val16(0))*uintptr(st.Mode.NbEBands*2)))
-		libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(&st.Rng))), 0, int((opus_custom_decoder_get_size(st.Mode, st.Channels)-(int64(uintptr(unsafe.Pointer((*byte)(unsafe.Pointer(&st.Rng))))-uintptr(unsafe.Pointer((*byte)(unsafe.Pointer(st)))))))*int64(unsafe.Sizeof(byte(0)))))
+		libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(&st.Rng))), 0, (opus_custom_decoder_get_size(st.Mode, st.Channels)-int(int64(uintptr(unsafe.Pointer((*byte)(unsafe.Pointer(&st.Rng))))-uintptr(unsafe.Pointer((*byte)(unsafe.Pointer(st)))))))*int(unsafe.Sizeof(byte(0))))
 		for i = 0; i < st.Mode.NbEBands*2; i++ {
 			*(*opus_val16)(unsafe.Add(unsafe.Pointer(oldLogE), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = func() opus_val16 {
 				p := (*opus_val16)(unsafe.Add(unsafe.Pointer(oldLogE2), unsafe.Sizeof(opus_val16(0))*uintptr(i)))
@@ -997,11 +997,11 @@ func opus_custom_decoder_ctl(st *OpusCustomDecoder, request int64, _rest ...inte
 		}
 		st.Skip_plc = 1
 	case OPUS_GET_PITCH_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Postfilter_period)
+		*value = int32(st.Postfilter_period)
 	case CELT_GET_MODE_REQUEST:
 		var value **OpusCustomMode = ap.Arg().(**OpusCustomMode)
 		if value == nil {
@@ -1009,26 +1009,26 @@ func opus_custom_decoder_ctl(st *OpusCustomDecoder, request int64, _rest ...inte
 		}
 		*value = st.Mode
 	case CELT_SET_SIGNALLING_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		st.Signalling = int64(value)
+		var value int32 = ap.Arg().(int32)
+		st.Signalling = int(value)
 	case OPUS_GET_FINAL_RANGE_REQUEST:
-		var value *opus_uint32 = ap.Arg().(*opus_uint32)
+		var value *uint32 = ap.Arg().(*uint32)
 		if value == nil {
 			goto bad_arg
 		}
 		*value = st.Rng
 	case OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < 0 || value > 1 {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < 0 || int(value) > 1 {
 			goto bad_arg
 		}
-		st.Disable_inv = int64(value)
+		st.Disable_inv = int(value)
 	case OPUS_GET_PHASE_INVERSION_DISABLED_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Disable_inv)
+		*value = int32(st.Disable_inv)
 	default:
 		goto bad_request
 	}

@@ -7,29 +7,29 @@ import (
 )
 
 type OpusDecoder struct {
-	Celt_dec_offset      int64
-	Silk_dec_offset      int64
-	Channels             int64
-	Fs                   opus_int32
+	Celt_dec_offset      int
+	Silk_dec_offset      int
+	Channels             int
+	Fs                   int32
 	DecControl           silk_DecControlStruct
-	Decode_gain          int64
-	Arch                 int64
-	Stream_channels      int64
-	Bandwidth            int64
-	Mode                 int64
-	Prev_mode            int64
-	Frame_size           int64
-	Prev_redundancy      int64
-	Last_packet_duration int64
+	Decode_gain          int
+	Arch                 int
+	Stream_channels      int
+	Bandwidth            int
+	Mode                 int
+	Prev_mode            int
+	Frame_size           int
+	Prev_redundancy      int
+	Last_packet_duration int
 	Softclip_mem         [2]opus_val16
-	RangeFinal           opus_uint32
+	RangeFinal           uint32
 }
 
-func opus_decoder_get_size(channels int64) int64 {
+func opus_decoder_get_size(channels int) int {
 	var (
-		silkDecSizeBytes int64
-		celtDecSizeBytes int64
-		ret              int64
+		silkDecSizeBytes int
+		celtDecSizeBytes int
+		ret              int
 	)
 	if channels < 1 || channels > 2 {
 		return 0
@@ -40,36 +40,36 @@ func opus_decoder_get_size(channels int64) int64 {
 	}
 	silkDecSizeBytes = align(silkDecSizeBytes)
 	celtDecSizeBytes = celt_decoder_get_size(channels)
-	return align(int64(unsafe.Sizeof(OpusDecoder{}))) + silkDecSizeBytes + celtDecSizeBytes
+	return align(int(unsafe.Sizeof(OpusDecoder{}))) + silkDecSizeBytes + celtDecSizeBytes
 }
-func opus_decoder_init(st *OpusDecoder, Fs opus_int32, channels int64) int64 {
+func opus_decoder_init(st *OpusDecoder, Fs int32, channels int) int {
 	var (
 		silk_dec         unsafe.Pointer
 		celt_dec         *OpusCustomDecoder
-		ret              int64
-		silkDecSizeBytes int64
+		ret              int
+		silkDecSizeBytes int
 	)
-	if Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000 || channels != 1 && channels != 2 {
+	if int(Fs) != 48000 && int(Fs) != 24000 && int(Fs) != 16000 && int(Fs) != 12000 && int(Fs) != 8000 || channels != 1 && channels != 2 {
 		return -1
 	}
-	libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(st))), 0, int(opus_decoder_get_size(channels)*int64(unsafe.Sizeof(byte(0)))))
+	libc.MemSet(unsafe.Pointer((*byte)(unsafe.Pointer(st))), 0, opus_decoder_get_size(channels)*int(unsafe.Sizeof(byte(0))))
 	ret = silk_Get_Decoder_Size(&silkDecSizeBytes)
 	if ret != 0 {
 		return -3
 	}
 	silkDecSizeBytes = align(silkDecSizeBytes)
-	st.Silk_dec_offset = align(int64(unsafe.Sizeof(OpusDecoder{})))
+	st.Silk_dec_offset = align(int(unsafe.Sizeof(OpusDecoder{})))
 	st.Celt_dec_offset = st.Silk_dec_offset + silkDecSizeBytes
 	silk_dec = unsafe.Add(unsafe.Pointer((*byte)(unsafe.Pointer(st))), st.Silk_dec_offset)
 	celt_dec = (*OpusCustomDecoder)(unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer((*byte)(unsafe.Pointer(st))), st.Celt_dec_offset))))
-	st.Stream_channels = func() int64 {
+	st.Stream_channels = func() int {
 		p := &st.Channels
 		st.Channels = channels
 		return *p
 	}()
 	st.Fs = Fs
 	st.DecControl.API_sampleRate = st.Fs
-	st.DecControl.NChannelsAPI = opus_int32(st.Channels)
+	st.DecControl.NChannelsAPI = int32(st.Channels)
 	ret = silk_InitDecoder(silk_dec)
 	if ret != 0 {
 		return -3
@@ -78,27 +78,27 @@ func opus_decoder_init(st *OpusDecoder, Fs opus_int32, channels int64) int64 {
 	if ret != OPUS_OK {
 		return -3
 	}
-	opus_custom_decoder_ctl(celt_dec, CELT_SET_SIGNALLING_REQUEST, func() int64 {
+	opus_custom_decoder_ctl(celt_dec, CELT_SET_SIGNALLING_REQUEST, func() int {
 		0 == 0
 		return 0
 	}())
 	st.Prev_mode = 0
-	st.Frame_size = int64(Fs / 400)
+	st.Frame_size = int(Fs) / 400
 	st.Arch = opus_select_arch()
 	return OPUS_OK
 }
-func opus_decoder_create(Fs opus_int32, channels int64, error *int64) *OpusDecoder {
+func opus_decoder_create(Fs int32, channels int, error *int) *OpusDecoder {
 	var (
-		ret int64
+		ret int
 		st  *OpusDecoder
 	)
-	if Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000 || channels != 1 && channels != 2 {
+	if int(Fs) != 48000 && int(Fs) != 24000 && int(Fs) != 16000 && int(Fs) != 12000 && int(Fs) != 8000 || channels != 1 && channels != 2 {
 		if error != nil {
 			*error = -1
 		}
 		return nil
 	}
-	st = (*OpusDecoder)(libc.Malloc(int(opus_decoder_get_size(channels))))
+	st = (*OpusDecoder)(libc.Malloc(opus_decoder_get_size(channels)))
 	if st == nil {
 		if error != nil {
 			*error = -7
@@ -115,80 +115,80 @@ func opus_decoder_create(Fs opus_int32, channels int64, error *int64) *OpusDecod
 	}
 	return st
 }
-func smooth_fade(in1 *opus_val16, in2 *opus_val16, out *opus_val16, overlap int64, channels int64, window *opus_val16, Fs opus_int32) {
+func smooth_fade(in1 *opus_val16, in2 *opus_val16, out *opus_val16, overlap int, channels int, window *opus_val16, Fs int32) {
 	var (
-		i   int64
-		c   int64
-		inc int64 = int64(48000 / Fs)
+		i   int
+		c   int
+		inc int = 48000 / int(Fs)
 	)
 	for c = 0; c < channels; c++ {
 		for i = 0; i < overlap; i++ {
 			var w opus_val16 = ((*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(i*inc)))) * (*(*opus_val16)(unsafe.Add(unsafe.Pointer(window), unsafe.Sizeof(opus_val16(0))*uintptr(i*inc)))))
-			*(*opus_val16)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c))) = opus_val16((opus_val32(w) * opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(in2), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c))))) + opus_val32(Q15ONE-float64(w))*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(in1), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c)))))
+			*(*opus_val16)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c))) = opus_val16((opus_val32(w) * opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(in2), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c))))) + opus_val32(Q15ONE-w)*opus_val32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(in1), unsafe.Sizeof(opus_val16(0))*uintptr(i*channels+c)))))
 		}
 	}
 }
-func opus_packet_get_mode(data *uint8) int64 {
-	var mode int64
-	if int64(*data)&0x80 != 0 {
+func opus_packet_get_mode(data *uint8) int {
+	var mode int
+	if int(*data)&0x80 != 0 {
 		mode = MODE_CELT_ONLY
-	} else if (int64(*data) & 0x60) == 0x60 {
+	} else if (int(*data) & 0x60) == 0x60 {
 		mode = MODE_HYBRID
 	} else {
 		mode = MODE_SILK_ONLY
 	}
 	return mode
 }
-func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_val16, frame_size int64, decode_fec int64) int64 {
+func opus_decode_frame(st *OpusDecoder, data *uint8, len_ int32, pcm *opus_val16, frame_size int, decode_fec int) int {
 	var (
 		silk_dec                 unsafe.Pointer
 		celt_dec                 *OpusCustomDecoder
-		i                        int64
-		silk_ret                 int64 = 0
-		celt_ret                 int64 = 0
+		i                        int
+		silk_ret                 int = 0
+		celt_ret                 int = 0
 		dec                      ec_dec
-		silk_frame_size          opus_int32
-		pcm_silk_size            int64
-		pcm_silk                 *opus_int16
-		pcm_transition_silk_size int64
+		silk_frame_size          int32
+		pcm_silk_size            int
+		pcm_silk                 *int16
+		pcm_transition_silk_size int
 		pcm_transition_silk      *opus_val16
-		pcm_transition_celt_size int64
+		pcm_transition_celt_size int
 		pcm_transition_celt      *opus_val16
 		pcm_transition           *opus_val16 = nil
-		redundant_audio_size     int64
+		redundant_audio_size     int
 		redundant_audio          *opus_val16
-		audiosize                int64
-		mode                     int64
-		bandwidth                int64
-		transition               int64 = 0
-		start_band               int64
-		redundancy               int64 = 0
-		redundancy_bytes         int64 = 0
-		celt_to_silk             int64 = 0
-		c                        int64
-		F2_5                     int64
-		F5                       int64
-		F10                      int64
-		F20                      int64
+		audiosize                int
+		mode                     int
+		bandwidth                int
+		transition               int = 0
+		start_band               int
+		redundancy               int = 0
+		redundancy_bytes         int = 0
+		celt_to_silk             int = 0
+		c                        int
+		F2_5                     int
+		F5                       int
+		F10                      int
+		F20                      int
 		window                   *opus_val16
-		redundant_rng            opus_uint32 = 0
-		celt_accum               int64
+		redundant_rng            uint32 = 0
+		celt_accum               int
 	)
 	silk_dec = unsafe.Add(unsafe.Pointer((*byte)(unsafe.Pointer(st))), st.Silk_dec_offset)
 	celt_dec = (*OpusCustomDecoder)(unsafe.Pointer((*byte)(unsafe.Add(unsafe.Pointer((*byte)(unsafe.Pointer(st))), st.Celt_dec_offset))))
-	F20 = int64(st.Fs / 50)
+	F20 = int(st.Fs) / 50
 	F10 = F20 >> 1
 	F5 = F10 >> 1
 	F2_5 = F5 >> 1
 	if frame_size < F2_5 {
 		return -2
 	}
-	if frame_size < int64(st.Fs/25*3) {
+	if frame_size < (int(st.Fs) / 25 * 3) {
 		frame_size = frame_size
 	} else {
-		frame_size = int64(st.Fs / 25 * 3)
+		frame_size = int(st.Fs) / 25 * 3
 	}
-	if len_ <= 1 {
+	if int(len_) <= 1 {
 		data = nil
 		if frame_size < st.Frame_size {
 			frame_size = frame_size
@@ -200,7 +200,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		audiosize = st.Frame_size
 		mode = st.Mode
 		bandwidth = st.Bandwidth
-		ec_dec_init(&dec, data, opus_uint32(len_))
+		ec_dec_init(&dec, data, uint32(len_))
 	} else {
 		audiosize = frame_size
 		if st.Prev_redundancy != 0 {
@@ -218,7 +218,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		if audiosize > F20 {
 			for {
 				{
-					var ret int64 = opus_decode_frame(st, nil, 0, pcm, func() int64 {
+					var ret int = opus_decode_frame(st, nil, 0, pcm, func() int {
 						if audiosize < F20 {
 							return audiosize
 						}
@@ -254,10 +254,10 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 			pcm_transition_silk_size = F5 * st.Channels
 		}
 	}
-	pcm_transition_celt = (*opus_val16)(libc.Malloc(int(pcm_transition_celt_size * int64(unsafe.Sizeof(opus_val16(0))))))
+	pcm_transition_celt = (*opus_val16)(libc.Malloc(pcm_transition_celt_size * int(unsafe.Sizeof(opus_val16(0)))))
 	if transition != 0 && mode == MODE_CELT_ONLY {
 		pcm_transition = pcm_transition_celt
-		opus_decode_frame(st, nil, 0, pcm_transition, func() int64 {
+		opus_decode_frame(st, nil, 0, pcm_transition, func() int {
 			if F5 < audiosize {
 				return F5
 			}
@@ -270,7 +270,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		frame_size = audiosize
 	}
 	if mode != MODE_CELT_ONLY && celt_accum == 0 {
-		pcm_silk_size = (func() int64 {
+		pcm_silk_size = (func() int {
 			if F10 > frame_size {
 				return F10
 			}
@@ -279,24 +279,24 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 	} else {
 		pcm_silk_size = ALLOC_NONE
 	}
-	pcm_silk = (*opus_int16)(libc.Malloc(int(pcm_silk_size * int64(unsafe.Sizeof(opus_int16(0))))))
+	pcm_silk = (*int16)(libc.Malloc(pcm_silk_size * int(unsafe.Sizeof(int16(0)))))
 	if mode != MODE_CELT_ONLY {
 		var (
-			lost_flag       int64
-			decoded_samples int64
-			pcm_ptr         *opus_int16
+			lost_flag       int
+			decoded_samples int
+			pcm_ptr         *int16
 		)
 		pcm_ptr = pcm_silk
 		if st.Prev_mode == MODE_CELT_ONLY {
 			silk_InitDecoder(silk_dec)
 		}
-		if 10 > (audiosize * 1000 / int64(st.Fs)) {
+		if 10 > (audiosize * 1000 / int(st.Fs)) {
 			st.DecControl.PayloadSize_ms = 10
 		} else {
-			st.DecControl.PayloadSize_ms = audiosize * 1000 / int64(st.Fs)
+			st.DecControl.PayloadSize_ms = audiosize * 1000 / int(st.Fs)
 		}
 		if data != nil {
-			st.DecControl.NChannelsInternal = opus_int32(st.Stream_channels)
+			st.DecControl.NChannelsInternal = int32(st.Stream_channels)
 			if mode == MODE_SILK_ONLY {
 				if bandwidth == OPUS_BANDWIDTH_NARROWBAND {
 					st.DecControl.InternalSampleRate = 8000
@@ -319,20 +319,20 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		decoded_samples = 0
 		for {
 			{
-				var first_frame int64 = int64(libc.BoolToInt(decoded_samples == 0))
+				var first_frame int = int(libc.BoolToInt(decoded_samples == 0))
 				silk_ret = silk_Decode(silk_dec, &st.DecControl, lost_flag, first_frame, &dec, pcm_ptr, &silk_frame_size, st.Arch)
 				if silk_ret != 0 {
 					if lost_flag != 0 {
-						silk_frame_size = opus_int32(frame_size)
+						silk_frame_size = int32(frame_size)
 						for i = 0; i < frame_size*st.Channels; i++ {
-							*(*opus_int16)(unsafe.Add(unsafe.Pointer(pcm_ptr), unsafe.Sizeof(opus_int16(0))*uintptr(i))) = 0
+							*(*int16)(unsafe.Add(unsafe.Pointer(pcm_ptr), unsafe.Sizeof(int16(0))*uintptr(i))) = 0
 						}
 					} else {
 						return -3
 					}
 				}
-				pcm_ptr = (*opus_int16)(unsafe.Add(unsafe.Pointer(pcm_ptr), unsafe.Sizeof(opus_int16(0))*uintptr(silk_frame_size*opus_int32(st.Channels))))
-				decoded_samples += int64(silk_frame_size)
+				pcm_ptr = (*int16)(unsafe.Add(unsafe.Pointer(pcm_ptr), unsafe.Sizeof(int16(0))*uintptr(int(silk_frame_size)*st.Channels)))
+				decoded_samples += int(silk_frame_size)
 			}
 			if decoded_samples >= frame_size {
 				break
@@ -340,7 +340,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 	}
 	start_band = 0
-	if decode_fec == 0 && mode != MODE_CELT_ONLY && data != nil && ec_tell((*ec_ctx)(unsafe.Pointer(&dec)))+17+int64(libc.BoolToInt(mode == MODE_HYBRID))*20 <= int64(len_*8) {
+	if decode_fec == 0 && mode != MODE_CELT_ONLY && data != nil && ec_tell((*ec_ctx)(unsafe.Pointer(&dec)))+17+int(libc.BoolToInt(mode == MODE_HYBRID))*20 <= int(len_)*8 {
 		if mode == MODE_HYBRID {
 			redundancy = ec_dec_bit_logp(&dec, 12)
 		} else {
@@ -349,17 +349,17 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		if redundancy != 0 {
 			celt_to_silk = ec_dec_bit_logp(&dec, 1)
 			if mode == MODE_HYBRID {
-				redundancy_bytes = int64(opus_int32(ec_dec_uint(&dec, 256)) + 2)
+				redundancy_bytes = int(int32(ec_dec_uint(&dec, 256))) + 2
 			} else {
-				redundancy_bytes = int64(len_ - opus_int32((ec_tell((*ec_ctx)(unsafe.Pointer(&dec)))+7)>>3))
+				redundancy_bytes = int(len_) - ((ec_tell((*ec_ctx)(unsafe.Pointer(&dec))) + 7) >> 3)
 			}
-			len_ -= opus_int32(redundancy_bytes)
-			if len_*8 < opus_int32(ec_tell((*ec_ctx)(unsafe.Pointer(&dec)))) {
+			len_ -= int32(redundancy_bytes)
+			if int(len_)*8 < ec_tell((*ec_ctx)(unsafe.Pointer(&dec))) {
 				len_ = 0
 				redundancy_bytes = 0
 				redundancy = 0
 			}
-			dec.Storage -= opus_uint32(redundancy_bytes)
+			dec.Storage -= uint32(int32(redundancy_bytes))
 		}
 	}
 	if mode != MODE_CELT_ONLY {
@@ -369,10 +369,10 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		transition = 0
 		pcm_transition_silk_size = ALLOC_NONE
 	}
-	pcm_transition_silk = (*opus_val16)(libc.Malloc(int(pcm_transition_silk_size * int64(unsafe.Sizeof(opus_val16(0))))))
+	pcm_transition_silk = (*opus_val16)(libc.Malloc(pcm_transition_silk_size * int(unsafe.Sizeof(opus_val16(0)))))
 	if transition != 0 && mode != MODE_CELT_ONLY {
 		pcm_transition = pcm_transition_silk
-		opus_decode_frame(st, nil, 0, pcm_transition, func() int64 {
+		opus_decode_frame(st, nil, 0, pcm_transition, func() int {
 			if F5 < audiosize {
 				return F5
 			}
@@ -380,7 +380,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}(), 0)
 	}
 	if bandwidth != 0 {
-		var endband int64 = 21
+		var endband int = 21
 		switch bandwidth {
 		case OPUS_BANDWIDTH_NARROWBAND:
 			endband = 13
@@ -395,9 +395,9 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		default:
 		}
 		for {
-			if opus_custom_decoder_ctl(celt_dec, CELT_SET_END_BAND_REQUEST, func() opus_int32 {
+			if opus_custom_decoder_ctl(celt_dec, CELT_SET_END_BAND_REQUEST, func() int32 {
 				endband == 0
-				return opus_int32(endband)
+				return int32(endband)
 			}()) != OPUS_OK {
 				return -3
 			}
@@ -407,9 +407,9 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 	}
 	for {
-		if opus_custom_decoder_ctl(celt_dec, CELT_SET_CHANNELS_REQUEST, func() opus_int32 {
+		if opus_custom_decoder_ctl(celt_dec, CELT_SET_CHANNELS_REQUEST, func() int32 {
 			st.Stream_channels == 0
-			return opus_int32(st.Stream_channels)
+			return int32(st.Stream_channels)
 		}()) != OPUS_OK {
 			return -3
 		}
@@ -422,10 +422,10 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 	} else {
 		redundant_audio_size = ALLOC_NONE
 	}
-	redundant_audio = (*opus_val16)(libc.Malloc(int(redundant_audio_size * int64(unsafe.Sizeof(opus_val16(0))))))
+	redundant_audio = (*opus_val16)(libc.Malloc(redundant_audio_size * int(unsafe.Sizeof(opus_val16(0)))))
 	if redundancy != 0 && celt_to_silk != 0 {
 		for {
-			if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int64 {
+			if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int {
 				0 == 0
 				return 0
 			}()) != OPUS_OK {
@@ -437,7 +437,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 		celt_decode_with_ec(celt_dec, (*uint8)(unsafe.Add(unsafe.Pointer(data), len_)), redundancy_bytes, redundant_audio, F5, nil, 0)
 		for {
-			if opus_custom_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE_REQUEST, (*opus_uint32)(unsafe.Add(unsafe.Pointer(&redundant_rng), unsafe.Sizeof(opus_uint32(0))*uintptr(int64(uintptr(unsafe.Pointer(&redundant_rng))-uintptr(unsafe.Pointer(&redundant_rng))))))) != OPUS_OK {
+			if opus_custom_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE_REQUEST, (*uint32)(unsafe.Add(unsafe.Pointer(&redundant_rng), unsafe.Sizeof(uint32(0))*uintptr(int64(uintptr(unsafe.Pointer(&redundant_rng))-uintptr(unsafe.Pointer(&redundant_rng))))))) != OPUS_OK {
 				return -3
 			}
 			if true {
@@ -446,9 +446,9 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 	}
 	for {
-		if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() opus_int32 {
+		if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int32 {
 			start_band == 0
-			return opus_int32(start_band)
+			return int32(start_band)
 		}()) != OPUS_OK {
 			return -3
 		}
@@ -457,7 +457,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 	}
 	if mode != MODE_SILK_ONLY {
-		var celt_frame_size int64 = (func() int64 {
+		var celt_frame_size int = (func() int {
 			if F20 < frame_size {
 				return F20
 			}
@@ -478,7 +478,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 				return nil
 			}
 			return data
-		}(), int64(len_), pcm, celt_frame_size, &dec, celt_accum)
+		}(), int(len_), pcm, celt_frame_size, &dec, celt_accum)
 	} else {
 		var silence [2]uint8 = [2]uint8{math.MaxUint8, math.MaxUint8}
 		if celt_accum == 0 {
@@ -488,7 +488,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 		if st.Prev_mode == MODE_HYBRID && (redundancy == 0 || celt_to_silk == 0 || st.Prev_redundancy == 0) {
 			for {
-				if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int64 {
+				if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int {
 					0 == 0
 					return 0
 				}()) != OPUS_OK {
@@ -503,7 +503,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 	}
 	if mode != MODE_CELT_ONLY && celt_accum == 0 {
 		for i = 0; i < frame_size*st.Channels; i++ {
-			*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i))) + opus_val16(float64(*(*opus_int16)(unsafe.Add(unsafe.Pointer(pcm_silk), unsafe.Sizeof(opus_int16(0))*uintptr(i))))*(1.0/32768.0))
+			*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i))) + opus_val16(float64(*(*int16)(unsafe.Add(unsafe.Pointer(pcm_silk), unsafe.Sizeof(int16(0))*uintptr(i))))*(1.0/32768.0))
 		}
 	}
 	{
@@ -528,7 +528,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 			}
 		}
 		for {
-			if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int64 {
+			if opus_custom_decoder_ctl(celt_dec, CELT_SET_START_BAND_REQUEST, func() int {
 				0 == 0
 				return 0
 			}()) != OPUS_OK {
@@ -540,7 +540,7 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 		}
 		celt_decode_with_ec(celt_dec, (*uint8)(unsafe.Add(unsafe.Pointer(data), len_)), redundancy_bytes, redundant_audio, F5, nil, 0)
 		for {
-			if opus_custom_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE_REQUEST, (*opus_uint32)(unsafe.Add(unsafe.Pointer(&redundant_rng), unsafe.Sizeof(opus_uint32(0))*uintptr(int64(uintptr(unsafe.Pointer(&redundant_rng))-uintptr(unsafe.Pointer(&redundant_rng))))))) != OPUS_OK {
+			if opus_custom_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE_REQUEST, (*uint32)(unsafe.Add(unsafe.Pointer(&redundant_rng), unsafe.Sizeof(uint32(0))*uintptr(int64(uintptr(unsafe.Pointer(&redundant_rng))-uintptr(unsafe.Pointer(&redundant_rng))))))) != OPUS_OK {
 				return -3
 			}
 			if true {
@@ -576,13 +576,13 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 			*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(x)
 		}
 	}
-	if len_ <= 1 {
+	if int(len_) <= 1 {
 		st.RangeFinal = 0
 	} else {
-		st.RangeFinal = dec.Rng ^ redundant_rng
+		st.RangeFinal = uint32(int32(int(dec.Rng) ^ int(redundant_rng)))
 	}
 	st.Prev_mode = mode
-	st.Prev_redundancy = int64(libc.BoolToInt(redundancy != 0 && celt_to_silk == 0))
+	st.Prev_redundancy = int(libc.BoolToInt(redundancy != 0 && celt_to_silk == 0))
 	if celt_ret >= 0 {
 		if _opus_false() != 0 {
 			for {
@@ -597,30 +597,30 @@ func opus_decode_frame(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_
 	}
 	return audiosize
 }
-func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_val16, frame_size int64, decode_fec int64, self_delimited int64, packet_offset *opus_int32, soft_clip int64) int64 {
+func opus_decode_native(st *OpusDecoder, data *uint8, len_ int32, pcm *opus_val16, frame_size int, decode_fec int, self_delimited int, packet_offset *int32, soft_clip int) int {
 	var (
-		i                      int64
-		nb_samples             int64
-		count                  int64
-		offset                 int64
+		i                      int
+		nb_samples             int
+		count                  int
+		offset                 int
 		toc                    uint8
-		packet_frame_size      int64
-		packet_bandwidth       int64
-		packet_mode            int64
-		packet_stream_channels int64
-		size                   [48]opus_int16
+		packet_frame_size      int
+		packet_bandwidth       int
+		packet_mode            int
+		packet_stream_channels int
+		size                   [48]int16
 	)
 	if decode_fec < 0 || decode_fec > 1 {
 		return -1
 	}
-	if (decode_fec != 0 || len_ == 0 || data == nil) && frame_size%int64(st.Fs/400) != 0 {
+	if (decode_fec != 0 || int(len_) == 0 || data == nil) && frame_size%(int(st.Fs)/400) != 0 {
 		return -1
 	}
-	if len_ == 0 || data == nil {
-		var pcm_count int64 = 0
+	if int(len_) == 0 || data == nil {
+		var pcm_count int = 0
 		for {
 			{
-				var ret int64
+				var ret int
 				ret = opus_decode_frame(st, nil, 0, (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(pcm_count*st.Channels))), frame_size-pcm_count, 0)
 				if ret < 0 {
 					return ret
@@ -640,7 +640,7 @@ func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus
 		}
 		st.Last_packet_duration = pcm_count
 		return pcm_count
-	} else if len_ < 0 {
+	} else if int(len_) < 0 {
 		return -1
 	}
 	packet_mode = opus_packet_get_mode(data)
@@ -654,8 +654,8 @@ func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus
 	data = (*uint8)(unsafe.Add(unsafe.Pointer(data), offset))
 	if decode_fec != 0 {
 		var (
-			duration_copy int64
-			ret           int64
+			duration_copy int
+			ret           int
 		)
 		if frame_size < packet_frame_size || packet_mode == MODE_CELT_ONLY || st.Mode == MODE_CELT_ONLY {
 			return opus_decode_native(st, nil, 0, pcm, frame_size, 0, 0, nil, soft_clip)
@@ -672,7 +672,7 @@ func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus
 		st.Bandwidth = packet_bandwidth
 		st.Frame_size = packet_frame_size
 		st.Stream_channels = packet_stream_channels
-		ret = opus_decode_frame(st, data, opus_int32(size[0]), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*(frame_size-packet_frame_size)))), packet_frame_size, 1)
+		ret = opus_decode_frame(st, data, int32(size[0]), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(st.Channels*(frame_size-packet_frame_size)))), packet_frame_size, 1)
 		if ret < 0 {
 			return ret
 		} else {
@@ -696,8 +696,8 @@ func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus
 	st.Stream_channels = packet_stream_channels
 	nb_samples = 0
 	for i = 0; i < count; i++ {
-		var ret int64
-		ret = opus_decode_frame(st, data, opus_int32(size[i]), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(nb_samples*st.Channels))), frame_size-nb_samples, 0)
+		var ret int
+		ret = opus_decode_frame(st, data, int32(size[i]), (*opus_val16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_val16(0))*uintptr(nb_samples*st.Channels))), frame_size-nb_samples, 0)
 		if ret < 0 {
 			return ret
 		}
@@ -723,18 +723,18 @@ func opus_decode_native(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus
 	}
 	return nb_samples
 }
-func opus_decode(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_int16, frame_size int64, decode_fec int64) int64 {
+func opus_decode(st *OpusDecoder, data *uint8, len_ int32, pcm *int16, frame_size int, decode_fec int) int {
 	var (
 		out        *float32
-		ret        int64
-		i          int64
-		nb_samples int64
+		ret        int
+		i          int
+		nb_samples int
 	)
 	if frame_size <= 0 {
 		return -1
 	}
-	if data != nil && len_ > 0 && decode_fec == 0 {
-		nb_samples = opus_decoder_get_nb_samples(st, [0]uint8(data), len_)
+	if data != nil && int(len_) > 0 && decode_fec == 0 {
+		nb_samples = opus_decoder_get_nb_samples(st, []uint8(data), len_)
 		if nb_samples > 0 {
 			if frame_size < nb_samples {
 				frame_size = frame_size
@@ -745,24 +745,24 @@ func opus_decode(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_int16,
 			return -4
 		}
 	}
-	out = (*float32)(libc.Malloc(int((frame_size * st.Channels) * int64(unsafe.Sizeof(float32(0))))))
+	out = (*float32)(libc.Malloc((frame_size * st.Channels) * int(unsafe.Sizeof(float32(0)))))
 	ret = opus_decode_native(st, data, len_, (*opus_val16)(unsafe.Pointer(out)), frame_size, decode_fec, 0, nil, 1)
 	if ret > 0 {
 		for i = 0; i < ret*st.Channels; i++ {
-			*(*opus_int16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(opus_int16(0))*uintptr(i))) = FLOAT2INT16(*(*float32)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(float32(0))*uintptr(i))))
+			*(*int16)(unsafe.Add(unsafe.Pointer(pcm), unsafe.Sizeof(int16(0))*uintptr(i))) = FLOAT2INT16(*(*float32)(unsafe.Add(unsafe.Pointer(out), unsafe.Sizeof(float32(0))*uintptr(i))))
 		}
 	}
 	return ret
 }
-func opus_decode_float(st *OpusDecoder, data *uint8, len_ opus_int32, pcm *opus_val16, frame_size int64, decode_fec int64) int64 {
+func opus_decode_float(st *OpusDecoder, data *uint8, len_ int32, pcm *opus_val16, frame_size int, decode_fec int) int {
 	if frame_size <= 0 {
 		return -1
 	}
 	return opus_decode_native(st, data, len_, pcm, frame_size, decode_fec, 0, nil, 0)
 }
-func opus_decoder_ctl(st *OpusDecoder, request int64, _rest ...interface{}) int64 {
+func opus_decoder_ctl(st *OpusDecoder, request int, _rest ...interface{}) int {
 	var (
-		ret      int64 = OPUS_OK
+		ret      int = OPUS_OK
 		ap       libc.ArgList
 		silk_dec unsafe.Pointer
 		celt_dec *OpusCustomDecoder
@@ -772,13 +772,13 @@ func opus_decoder_ctl(st *OpusDecoder, request int64, _rest ...interface{}) int6
 	ap.Start(request, _rest)
 	switch request {
 	case OPUS_GET_BANDWIDTH_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Bandwidth)
+		*value = int32(st.Bandwidth)
 	case OPUS_GET_FINAL_RANGE_REQUEST:
-		var value *opus_uint32 = ap.Arg().(*opus_uint32)
+		var value *uint32 = ap.Arg().(*uint32)
 		if value == nil {
 			goto bad_arg
 		}
@@ -788,56 +788,56 @@ func opus_decoder_ctl(st *OpusDecoder, request int64, _rest ...interface{}) int6
 		opus_custom_decoder_ctl(celt_dec, OPUS_RESET_STATE)
 		silk_InitDecoder(silk_dec)
 		st.Stream_channels = st.Channels
-		st.Frame_size = int64(st.Fs / 400)
+		st.Frame_size = int(st.Fs) / 400
 	case OPUS_GET_SAMPLE_RATE_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
 		*value = st.Fs
 	case OPUS_GET_PITCH_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
 		if st.Prev_mode == MODE_CELT_ONLY {
-			ret = opus_custom_decoder_ctl(celt_dec, OPUS_GET_PITCH_REQUEST, (*opus_int32)(unsafe.Add(unsafe.Pointer(value), unsafe.Sizeof(opus_int32(0))*uintptr(int64(uintptr(unsafe.Pointer(value))-uintptr(unsafe.Pointer(value)))))))
+			ret = opus_custom_decoder_ctl(celt_dec, OPUS_GET_PITCH_REQUEST, (*int32)(unsafe.Add(unsafe.Pointer(value), unsafe.Sizeof(int32(0))*uintptr(int64(uintptr(unsafe.Pointer(value))-uintptr(unsafe.Pointer(value)))))))
 		} else {
-			*value = opus_int32(st.DecControl.PrevPitchLag)
+			*value = int32(st.DecControl.PrevPitchLag)
 		}
 	case OPUS_GET_GAIN_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Decode_gain)
+		*value = int32(st.Decode_gain)
 	case OPUS_SET_GAIN_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < math.MinInt16 || value > math.MaxInt16 {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < math.MinInt16 || int(value) > math.MaxInt16 {
 			goto bad_arg
 		}
-		st.Decode_gain = int64(value)
+		st.Decode_gain = int(value)
 	case OPUS_GET_LAST_PACKET_DURATION_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		*value = opus_int32(st.Last_packet_duration)
+		*value = int32(st.Last_packet_duration)
 	case OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST:
-		var value opus_int32 = ap.Arg().(opus_int32)
-		if value < 0 || value > 1 {
+		var value int32 = ap.Arg().(int32)
+		if int(value) < 0 || int(value) > 1 {
 			goto bad_arg
 		}
-		ret = opus_custom_decoder_ctl(celt_dec, OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST, func() opus_int32 {
-			value == 0
+		ret = opus_custom_decoder_ctl(celt_dec, OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST, func() int32 {
+			int(value) == 0
 			return value
 		}())
 	case OPUS_GET_PHASE_INVERSION_DISABLED_REQUEST:
-		var value *opus_int32 = ap.Arg().(*opus_int32)
+		var value *int32 = ap.Arg().(*int32)
 		if value == nil {
 			goto bad_arg
 		}
-		ret = opus_custom_decoder_ctl(celt_dec, OPUS_GET_PHASE_INVERSION_DISABLED_REQUEST, (*opus_int32)(unsafe.Add(unsafe.Pointer(value), unsafe.Sizeof(opus_int32(0))*uintptr(int64(uintptr(unsafe.Pointer(value))-uintptr(unsafe.Pointer(value)))))))
+		ret = opus_custom_decoder_ctl(celt_dec, OPUS_GET_PHASE_INVERSION_DISABLED_REQUEST, (*int32)(unsafe.Add(unsafe.Pointer(value), unsafe.Sizeof(int32(0))*uintptr(int64(uintptr(unsafe.Pointer(value))-uintptr(unsafe.Pointer(value)))))))
 	default:
 		ret = -5
 	}
@@ -850,61 +850,61 @@ bad_arg:
 func opus_decoder_destroy(st *OpusDecoder) {
 	libc.Free(unsafe.Pointer(st))
 }
-func opus_packet_get_bandwidth(data *uint8) int64 {
-	var bandwidth int64
-	if int64(*data)&0x80 != 0 {
-		bandwidth = OPUS_BANDWIDTH_MEDIUMBAND + ((int64(*data) >> 5) & 0x3)
+func opus_packet_get_bandwidth(data *uint8) int {
+	var bandwidth int
+	if int(*data)&0x80 != 0 {
+		bandwidth = OPUS_BANDWIDTH_MEDIUMBAND + ((int(*data) >> 5) & 0x3)
 		if bandwidth == OPUS_BANDWIDTH_MEDIUMBAND {
 			bandwidth = OPUS_BANDWIDTH_NARROWBAND
 		}
-	} else if (int64(*data) & 0x60) == 0x60 {
-		if (int64(*data) & 0x10) != 0 {
+	} else if (int(*data) & 0x60) == 0x60 {
+		if (int(*data) & 0x10) != 0 {
 			bandwidth = OPUS_BANDWIDTH_FULLBAND
 		} else {
 			bandwidth = OPUS_BANDWIDTH_SUPERWIDEBAND
 		}
 	} else {
-		bandwidth = OPUS_BANDWIDTH_NARROWBAND + ((int64(*data) >> 5) & 0x3)
+		bandwidth = OPUS_BANDWIDTH_NARROWBAND + ((int(*data) >> 5) & 0x3)
 	}
 	return bandwidth
 }
-func opus_packet_get_nb_channels(data *uint8) int64 {
-	if (int64(*data) & 0x4) != 0 {
+func opus_packet_get_nb_channels(data *uint8) int {
+	if (int(*data) & 0x4) != 0 {
 		return 2
 	}
 	return 1
 }
-func opus_packet_get_nb_frames(packet [0]uint8, len_ opus_int32) int64 {
-	var count int64
-	if len_ < 1 {
+func opus_packet_get_nb_frames(packet []uint8, len_ int32) int {
+	var count int
+	if int(len_) < 1 {
 		return -1
 	}
-	count = int64(packet[0]) & 0x3
+	count = int(packet[0]) & 0x3
 	if count == 0 {
 		return 1
 	} else if count != 3 {
 		return 2
-	} else if len_ < 2 {
+	} else if int(len_) < 2 {
 		return -4
 	} else {
-		return int64(packet[1]) & 0x3F
+		return int(packet[1]) & 0x3F
 	}
 }
-func opus_packet_get_nb_samples(packet [0]uint8, len_ opus_int32, Fs opus_int32) int64 {
+func opus_packet_get_nb_samples(packet []uint8, len_ int32, Fs int32) int {
 	var (
-		samples int64
-		count   int64 = opus_packet_get_nb_frames(packet, len_)
+		samples int
+		count   int = opus_packet_get_nb_frames(packet, len_)
 	)
 	if count < 0 {
 		return count
 	}
 	samples = count * opus_packet_get_samples_per_frame(&packet[0], Fs)
-	if samples*25 > int64(Fs*3) {
+	if samples*25 > int(Fs)*3 {
 		return -4
 	} else {
 		return samples
 	}
 }
-func opus_decoder_get_nb_samples(dec *OpusDecoder, packet [0]uint8, len_ opus_int32) int64 {
+func opus_decoder_get_nb_samples(dec *OpusDecoder, packet []uint8, len_ int32) int {
 	return opus_packet_get_nb_samples(packet, len_, dec.Fs)
 }

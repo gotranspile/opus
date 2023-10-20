@@ -11,14 +11,14 @@ type _silk_resampler_state_struct struct {
 		I16 [36]int16
 	}
 	DelayBuf           [48]int16
-	Resampler_function int64
-	BatchSize          int64
+	Resampler_function int
+	BatchSize          int
 	InvRatio_Q16       int32
-	FIR_Order          int64
-	FIR_Fracs          int64
-	Fs_in_kHz          int64
-	Fs_out_kHz         int64
-	InputDelay         int64
+	FIR_Order          int
+	FIR_Fracs          int
+	Fs_in_kHz          int
+	Fs_out_kHz         int
+	InputDelay         int
 	Coefs              *int16
 }
 type silk_resampler_state_struct _silk_resampler_state_struct

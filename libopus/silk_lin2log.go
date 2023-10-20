@@ -1,10 +1,10 @@
 package libopus
 
-func silk_lin2log(inLin opus_int32) opus_int32 {
+func silk_lin2log(inLin int32) int32 {
 	var (
-		lz      opus_int32
-		frac_Q7 opus_int32
+		lz      int32
+		frac_Q7 int32
 	)
 	silk_CLZ_FRAC(inLin, &lz, &frac_Q7)
-	return (frac_Q7 + (((frac_Q7 * (128 - frac_Q7)) * 179) >> 16)) + (opus_int32(opus_uint32(31-lz) << 7))
+	return int32(int(int32(int(frac_Q7)+(((int(frac_Q7)*(128-int(frac_Q7)))*179)>>16))) + int(int32(int(uint32(int32(31-int(lz))))<<7)))
 }

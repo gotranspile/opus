@@ -16,7 +16,7 @@ type silk_encoder_control_FLP struct {
 	PredCoef          [2][16]float32
 	LTPCoef           [20]float32
 	LTP_scale         float32
-	PitchL            [4]int64
+	PitchL            [4]int
 	AR                [96]float32
 	LF_MA_shp         [4]float32
 	LF_AR_shp         [4]float32
@@ -28,18 +28,18 @@ type silk_encoder_control_FLP struct {
 	PredGain          float32
 	LTPredCodGain     float32
 	ResNrg            [4]float32
-	GainsUnq_Q16      [4]opus_int32
+	GainsUnq_Q16      [4]int32
 	LastGainIndexPrev int8
 }
 type silk_encoder struct {
 	State_Fxx                 [2]silk_encoder_state_FLP
 	SStereo                   stereo_enc_state
-	NBitsUsedLBRR             opus_int32
-	NBitsExceeded             opus_int32
-	NChannelsAPI              int64
-	NChannelsInternal         int64
-	NPrevChannelsInternal     int64
-	TimeSinceSwitchAllowed_ms int64
-	AllowBandwidthSwitch      int64
-	Prev_decode_only_middle   int64
+	NBitsUsedLBRR             int32
+	NBitsExceeded             int32
+	NChannelsAPI              int
+	NChannelsInternal         int
+	NPrevChannelsInternal     int
+	TimeSinceSwitchAllowed_ms int
+	AllowBandwidthSwitch      int
+	Prev_decode_only_middle   int
 }

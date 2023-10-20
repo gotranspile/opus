@@ -2,15 +2,15 @@ package libopus
 
 import "unsafe"
 
-func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int64, fs_API_Hz opus_int32) int64 {
+func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int, fs_API_Hz int32) int {
 	var (
-		frame_length int64
-		ret          int64 = 0
+		frame_length int
+		ret          int = 0
 	)
-	psDec.Subfr_length = int64(SUB_FRAME_LENGTH_MS * opus_int32(opus_int16(fs_kHz)))
-	frame_length = int64(opus_int32(opus_int16(psDec.Nb_subfr)) * opus_int32(opus_int16(psDec.Subfr_length)))
-	if psDec.Fs_kHz != fs_kHz || psDec.Fs_API_hz != fs_API_Hz {
-		ret += silk_resampler_init(&psDec.Resampler_state, opus_int32(opus_int16(fs_kHz))*1000, fs_API_Hz, 0)
+	psDec.Subfr_length = SUB_FRAME_LENGTH_MS * int(int32(int16(fs_kHz)))
+	frame_length = int(int32(int16(psDec.Nb_subfr))) * int(int32(int16(psDec.Subfr_length)))
+	if psDec.Fs_kHz != fs_kHz || int(psDec.Fs_API_hz) != int(fs_API_Hz) {
+		ret += silk_resampler_init(&psDec.Resampler_state, int32(int(int32(int16(fs_kHz)))*1000), fs_API_Hz, 0)
 		psDec.Fs_API_hz = fs_API_Hz
 	}
 	if psDec.Fs_kHz != fs_kHz || frame_length != psDec.Frame_length {
@@ -28,7 +28,7 @@ func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int64, fs_API_Hz opus
 			}
 		}
 		if psDec.Fs_kHz != fs_kHz {
-			psDec.Ltp_mem_length = int64(LTP_MEM_LENGTH_MS * opus_int32(opus_int16(fs_kHz)))
+			psDec.Ltp_mem_length = LTP_MEM_LENGTH_MS * int(int32(int16(fs_kHz)))
 			if fs_kHz == 8 || fs_kHz == 12 {
 				psDec.LPC_order = MIN_LPC_ORDER
 				psDec.PsNLSF_CB = &silk_NLSF_CB_NB_MB
@@ -48,8 +48,8 @@ func silk_decoder_set_fs(psDec *silk_decoder_state, fs_kHz int64, fs_API_Hz opus
 			psDec.LagPrev = 100
 			psDec.LastGainIndex = 10
 			psDec.PrevSignalType = TYPE_NO_VOICE_ACTIVITY
-			*(*[480]opus_int16)(unsafe.Pointer(&psDec.OutBuf[0])) = [480]opus_int16{}
-			*(*[16]opus_int32)(unsafe.Pointer(&psDec.SLPC_Q14_buf[0])) = [16]opus_int32{}
+			*(*[480]int16)(unsafe.Pointer(&psDec.OutBuf[0])) = [480]int16{}
+			*(*[16]int32)(unsafe.Pointer(&psDec.SLPC_Q14_buf[0])) = [16]int32{}
 		}
 		psDec.Fs_kHz = fs_kHz
 		psDec.Frame_length = frame_length

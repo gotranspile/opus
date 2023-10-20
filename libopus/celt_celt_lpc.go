@@ -7,16 +7,16 @@ import (
 
 const LPC_ORDER = 24
 
-func _celt_lpc(_lpc *opus_val16, ac *opus_val32, p int64) {
+func _celt_lpc(_lpc *opus_val16, ac *opus_val32, p int) {
 	var (
-		i     int64
-		j     int64
+		i     int
+		j     int
 		r     opus_val32
 		error opus_val32 = *(*opus_val32)(unsafe.Add(unsafe.Pointer(ac), unsafe.Sizeof(opus_val32(0))*0))
 		lpc   *float32   = (*float32)(unsafe.Pointer(_lpc))
 	)
-	libc.MemSet(unsafe.Pointer(lpc), 0, int(p*int64(unsafe.Sizeof(float32(0)))))
-	if float64(*(*opus_val32)(unsafe.Add(unsafe.Pointer(ac), unsafe.Sizeof(opus_val32(0))*0))) > 1e-10 {
+	libc.MemSet(unsafe.Pointer(lpc), 0, p*int(unsafe.Sizeof(float32(0))))
+	if *(*opus_val32)(unsafe.Add(unsafe.Pointer(ac), unsafe.Sizeof(opus_val32(0))*0)) > opus_val32(1e-10) {
 		for i = 0; i < p; i++ {
 			var rr opus_val32 = 0
 			for j = 0; j < i; j++ {
@@ -36,19 +36,19 @@ func _celt_lpc(_lpc *opus_val16, ac *opus_val32, p int64) {
 				*(*float32)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(float32(0))*uintptr(i-1-j))) = float32(tmp2 + r*tmp1)
 			}
 			error = error - (r*r)*error
-			if float64(error) <= float64(*(*opus_val32)(unsafe.Add(unsafe.Pointer(ac), unsafe.Sizeof(opus_val32(0))*0)))*0.001 {
+			if error <= *(*opus_val32)(unsafe.Add(unsafe.Pointer(ac), unsafe.Sizeof(opus_val32(0))*0))*opus_val32(0.001) {
 				break
 			}
 		}
 	}
 }
-func celt_fir_c(x *opus_val16, num *opus_val16, y *opus_val16, N int64, ord int64, arch int64) {
+func celt_fir_c(x *opus_val16, num *opus_val16, y *opus_val16, N int, ord int, arch int) {
 	var (
-		i    int64
-		j    int64
+		i    int
+		j    int
 		rnum *opus_val16
 	)
-	rnum = (*opus_val16)(libc.Malloc(int(ord * int64(unsafe.Sizeof(opus_val16(0))))))
+	rnum = (*opus_val16)(libc.Malloc(ord * int(unsafe.Sizeof(opus_val16(0)))))
 	for i = 0; i < ord; i++ {
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(rnum), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(num), unsafe.Sizeof(opus_val16(0))*uintptr(ord-i-1)))
 	}
@@ -73,15 +73,15 @@ func celt_fir_c(x *opus_val16, num *opus_val16, y *opus_val16, N int64, ord int6
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(y), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(sum)
 	}
 }
-func celt_iir(_x *opus_val32, den *opus_val16, _y *opus_val32, N int64, ord int64, mem *opus_val16, arch int64) {
+func celt_iir(_x *opus_val32, den *opus_val16, _y *opus_val32, N int, ord int, mem *opus_val16, arch int) {
 	var (
-		i    int64
-		j    int64
+		i    int
+		j    int
 		rden *opus_val16
 		y    *opus_val16
 	)
-	rden = (*opus_val16)(libc.Malloc(int(ord * int64(unsafe.Sizeof(opus_val16(0))))))
-	y = (*opus_val16)(libc.Malloc(int((N + ord) * int64(unsafe.Sizeof(opus_val16(0))))))
+	rden = (*opus_val16)(libc.Malloc(ord * int(unsafe.Sizeof(opus_val16(0)))))
+	y = (*opus_val16)(libc.Malloc((N + ord) * int(unsafe.Sizeof(opus_val16(0)))))
 	for i = 0; i < ord; i++ {
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(rden), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = *(*opus_val16)(unsafe.Add(unsafe.Pointer(den), unsafe.Sizeof(opus_val16(0))*uintptr(ord-i-1)))
 	}
@@ -126,17 +126,17 @@ func celt_iir(_x *opus_val32, den *opus_val16, _y *opus_val32, N int64, ord int6
 		*(*opus_val16)(unsafe.Add(unsafe.Pointer(mem), unsafe.Sizeof(opus_val16(0))*uintptr(i))) = opus_val16(*(*opus_val32)(unsafe.Add(unsafe.Pointer(_y), unsafe.Sizeof(opus_val32(0))*uintptr(N-i-1))))
 	}
 }
-func _celt_autocorr(x *opus_val16, ac *opus_val32, window *opus_val16, overlap int64, lag int64, n int64, arch int64) int64 {
+func _celt_autocorr(x *opus_val16, ac *opus_val32, window *opus_val16, overlap int, lag int, n int, arch int) int {
 	var (
 		d     opus_val32
-		i     int64
-		k     int64
-		fastN int64 = n - lag
-		shift int64
+		i     int
+		k     int
+		fastN int = n - lag
+		shift int
 		xptr  *opus_val16
 		xx    *opus_val16
 	)
-	xx = (*opus_val16)(libc.Malloc(int(n * int64(unsafe.Sizeof(opus_val16(0))))))
+	xx = (*opus_val16)(libc.Malloc(n * int(unsafe.Sizeof(opus_val16(0)))))
 	if overlap == 0 {
 		xptr = x
 	} else {
