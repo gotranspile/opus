@@ -10,7 +10,7 @@ func combine_pulses(out *int, in *int, len_ int) {
 }
 func encode_split(psRangeEnc *ec_enc, p_child1 int, p int, shell_table *uint8) {
 	if p > 0 {
-		ec_enc_icdf(psRangeEnc, p_child1, (*uint8)(unsafe.Add(unsafe.Pointer(shell_table), silk_shell_code_table_offsets[p])), 8)
+		ec_enc_icdf(psRangeEnc, p_child1, []byte((*uint8)(unsafe.Add(unsafe.Pointer(shell_table), silk_shell_code_table_offsets[p]))), 8)
 	}
 }
 func decode_split(p_child1 *int16, p_child2 *int16, psRangeDec *ec_dec, p int, shell_table *uint8) {

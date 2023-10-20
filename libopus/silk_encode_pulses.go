@@ -107,17 +107,17 @@ func silk_encode_pulses(psRangeEnc *ec_enc, signalType int, quantOffsetType int,
 			RateLevelIndex = k
 		}
 	}
-	ec_enc_icdf(psRangeEnc, RateLevelIndex, &silk_rate_levels_iCDF[signalType>>1][0], 8)
+	ec_enc_icdf(psRangeEnc, RateLevelIndex, silk_rate_levels_iCDF[signalType>>1][:], 8)
 	cdf_ptr = &silk_pulses_per_block_iCDF[RateLevelIndex][0]
 	for i = 0; i < iter; i++ {
 		if *(*int)(unsafe.Add(unsafe.Pointer(nRshifts), unsafe.Sizeof(int(0))*uintptr(i))) == 0 {
-			ec_enc_icdf(psRangeEnc, *(*int)(unsafe.Add(unsafe.Pointer(sum_pulses), unsafe.Sizeof(int(0))*uintptr(i))), cdf_ptr, 8)
+			ec_enc_icdf(psRangeEnc, *(*int)(unsafe.Add(unsafe.Pointer(sum_pulses), unsafe.Sizeof(int(0))*uintptr(i))), []byte(cdf_ptr), 8)
 		} else {
-			ec_enc_icdf(psRangeEnc, int(SILK_MAX_PULSES+1), cdf_ptr, 8)
+			ec_enc_icdf(psRangeEnc, int(SILK_MAX_PULSES+1), []byte(cdf_ptr), 8)
 			for k = 0; k < *(*int)(unsafe.Add(unsafe.Pointer(nRshifts), unsafe.Sizeof(int(0))*uintptr(i)))-1; k++ {
-				ec_enc_icdf(psRangeEnc, int(SILK_MAX_PULSES+1), &silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][0], 8)
+				ec_enc_icdf(psRangeEnc, int(SILK_MAX_PULSES+1), silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][:], 8)
 			}
-			ec_enc_icdf(psRangeEnc, *(*int)(unsafe.Add(unsafe.Pointer(sum_pulses), unsafe.Sizeof(int(0))*uintptr(i))), &silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][0], 8)
+			ec_enc_icdf(psRangeEnc, *(*int)(unsafe.Add(unsafe.Pointer(sum_pulses), unsafe.Sizeof(int(0))*uintptr(i))), silk_pulses_per_block_iCDF[int(N_RATE_LEVELS-1)][:], 8)
 		}
 	}
 	for i = 0; i < iter; i++ {
@@ -137,10 +137,10 @@ func silk_encode_pulses(psRangeEnc *ec_enc, signalType int, quantOffsetType int,
 				}
 				for j = nLS; j > 0; j-- {
 					bit = (int(abs_q) >> j) & 1
-					ec_enc_icdf(psRangeEnc, bit, &silk_lsb_iCDF[0], 8)
+					ec_enc_icdf(psRangeEnc, bit, silk_lsb_iCDF[:], 8)
 				}
 				bit = int(abs_q) & 1
-				ec_enc_icdf(psRangeEnc, bit, &silk_lsb_iCDF[0], 8)
+				ec_enc_icdf(psRangeEnc, bit, silk_lsb_iCDF[:], 8)
 			}
 		}
 	}

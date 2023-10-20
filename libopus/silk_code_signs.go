@@ -27,7 +27,7 @@ func silk_encode_signs(psRangeEnc *ec_enc, pulses []int8, length int, signalType
 			}()))
 			for j = 0; j < SHELL_CODEC_FRAME_LENGTH; j++ {
 				if int(*(*int8)(unsafe.Add(unsafe.Pointer(q_ptr), j))) != 0 {
-					ec_enc_icdf(psRangeEnc, (int(*(*int8)(unsafe.Add(unsafe.Pointer(q_ptr), j)))>>15)+1, &icdf[0], 8)
+					ec_enc_icdf(psRangeEnc, (int(*(*int8)(unsafe.Add(unsafe.Pointer(q_ptr), j)))>>15)+1, icdf[:], 8)
 				}
 			}
 		}

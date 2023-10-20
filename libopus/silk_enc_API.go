@@ -240,7 +240,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 			if psEnc.State_Fxx[0].SCmn.NFramesEncoded == 0 && prefillFlag == 0 {
 				var iCDF [2]uint8 = [2]uint8{}
 				iCDF[0] = uint8(int8(256 - (256 >> ((psEnc.State_Fxx[0].SCmn.NFramesPerPacket + 1) * int(encControl.NChannelsInternal)))))
-				ec_enc_icdf(psRangeEnc, 0, &iCDF[0], 8)
+				ec_enc_icdf(psRangeEnc, 0, iCDF[:], 8)
 				curr_nBitsUsedLBRR = ec_tell((*ec_ctx)(unsafe.Pointer(psRangeEnc)))
 				for n = 0; n < int(encControl.NChannelsInternal); n++ {
 					LBRR_symbol = 0
@@ -253,7 +253,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 						psEnc.State_Fxx[n].SCmn.LBRR_flag = 0
 					}
 					if int(LBRR_symbol) != 0 && psEnc.State_Fxx[n].SCmn.NFramesPerPacket > 1 {
-						ec_enc_icdf(psRangeEnc, int(LBRR_symbol)-1, silk_LBRR_flags_iCDF_ptr[psEnc.State_Fxx[n].SCmn.NFramesPerPacket-2], 8)
+						ec_enc_icdf(psRangeEnc, int(LBRR_symbol)-1, []byte(silk_LBRR_flags_iCDF_ptr[psEnc.State_Fxx[n].SCmn.NFramesPerPacket-2]), 8)
 					}
 				}
 				for i = 0; i < psEnc.State_Fxx[0].SCmn.NFramesPerPacket; i++ {

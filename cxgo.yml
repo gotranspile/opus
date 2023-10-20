@@ -122,6 +122,10 @@ idents:
     fields:
       - name: _icdf
         type: slice
+  - name: ec_enc_icdf
+    fields:
+      - name: _icdf
+        type: slice
   - name: silk_Decode
     fields:
       - name: samplesOut
@@ -199,6 +203,8 @@ files:
   - name: celt/entcode.c
     disabled: true # DONE
   - name: celt/entdec.c
+    disabled: true # DONE
+  - name: celt/entenc.c
     disabled: true # DONE
   - name: celt/mathops.c
     replace:

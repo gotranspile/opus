@@ -7,9 +7,7 @@ import (
 const EC_UINT_BITS = celt.EC_UINT_BITS
 const BITRES = celt.BITRES
 
-type ec_window = celt.ECWindow
 type ec_ctx = celt.ECCtx
-type ec_enc = celt.ECEnc
 
 func celt_udiv(n uint32, d uint32) uint32 {
 	return n / d

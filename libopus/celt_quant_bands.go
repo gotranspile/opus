@@ -141,7 +141,7 @@ func quant_coarse_energy_impl(m *OpusCustomMode, start int, end int, eBands *opu
 					} else {
 						qi = 1
 					}
-					ec_enc_icdf(enc, qi*2^(-int(libc.BoolToInt(qi < 0))), &small_energy_icdf[0], 2)
+					ec_enc_icdf(enc, qi*2^(-int(libc.BoolToInt(qi < 0))), small_energy_icdf[:], 2)
 				} else if int(budget)-int(tell) >= 1 {
 					if 0 < qi {
 						qi = 0
