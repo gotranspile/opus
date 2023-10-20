@@ -31,6 +31,42 @@ define:
     value: '1'
   - name: __STDC_VERSION__
     value: '199901'
+idents:
+  - name: DenseLayer
+    fields:
+      - name: bias
+        type: slice
+      - name: input_weights
+        type: slice
+  - name: GRULayer
+    fields:
+      - name: bias
+        type: slice
+      - name: input_weights
+        type: slice
+      - name: recurrent_weights
+        type: slice
+  - name: compute_dense
+    fields:
+      - name: output
+        type: slice
+      - name: input
+        type: slice
+  - name: compute_gru
+    fields:
+      - name: state
+        type: slice
+      - name: input
+        type: slice
+  - name: gemm_accum
+    fields:
+      - name: out
+        type: slice
+      - name: weights
+        type: slice
+      - name: x
+        type: slice
+
 src_files:
   - name: include/opus_types.h
     content: |

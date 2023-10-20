@@ -955,9 +955,9 @@ func tonality_analysis(tonal *TonalityAnalysisState, celt_mode *OpusCustomMode, 
 	features[22] = frame_stationarity - 0.743717
 	features[23] = info.Tonality_slope + 0.069216
 	features[24] = tonal.LowECount - 0.06793
-	compute_dense(&layer0, &layer_out[0], &features[0])
-	compute_gru(&layer1, &tonal.Rnn_state[0], &layer_out[0])
-	compute_dense(&layer2, &frame_probs[0], &tonal.Rnn_state[0])
+	compute_dense(&layer0, layer_out[:], features[:])
+	compute_gru(&layer1, tonal.Rnn_state[:], layer_out[:])
+	compute_dense(&layer2, frame_probs[:], tonal.Rnn_state[:])
 	info.Activity_probability = frame_probs[1]
 	info.Music_prob = frame_probs[0]
 	info.Bandwidth = bandwidth
