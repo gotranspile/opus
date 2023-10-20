@@ -1,4 +1,4 @@
-module opus
+module github.com/gotranspile/opus
 
 go 1.21
 

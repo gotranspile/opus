@@ -197,13 +197,7 @@ files:
   # ==== CELT ====
   - name: celt/arch.h
   - name: celt/entcode.c
-    skip:
-      - opus_uint32
-    replace:
-      - old: 'type ec_enc ec_ctx'
-        new: 'type ec_enc = ec_ctx'
-      - old: 'type ec_dec ec_ctx'
-        new: 'type ec_dec = ec_ctx'
+    disabled: true # DONE
   - name: celt/mathops.c
     replace:
       - old: PI
