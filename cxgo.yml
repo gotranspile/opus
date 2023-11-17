@@ -200,6 +200,28 @@ idents:
     fields:
       - name: ar
         type: slice
+  - name: silk_NLSF_decode
+    fields:
+      - name: pNLSF_Q15
+        type: slice
+      - name: NLSFIndices
+        type: slice
+  - name: silk_NLSF_stabilize
+    fields:
+      - name: NLSF_Q15
+        type: slice
+      - name: NDeltaMin_Q15
+        type: slice
+  - name: silk_insertion_sort_increasing_all_values_int16
+    fields:
+      - name: a
+        type: slice
+  - name: silk_insertion_sort_increasing
+    fields:
+      - name: a
+        type: slice
+      - name: idx
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -284,6 +306,10 @@ files:
   - name: silk/bwexpander.c
     disabled: true # DONE
   - name: silk/bwexpander_32.c
+    disabled: true # DONE
+  - name: silk/NLSF_decode.c
+    disabled: true # DONE
+  - name: silk/NLSF_stabilize.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====

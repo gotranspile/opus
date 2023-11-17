@@ -28,11 +28,11 @@ func silk_NLSF_encode(NLSFIndices *int8, pNLSF_Q15 *int16, psNLSF_CB *silk_NLSF_
 		iCDF_ptr     *uint8
 		pCB_Wght_Q9  *int16
 	)
-	silk_NLSF_stabilize(pNLSF_Q15, &psNLSF_CB.DeltaMin_Q15[0], int(psNLSF_CB.Order))
+	silk_NLSF_stabilize([]int16(pNLSF_Q15), psNLSF_CB.DeltaMin_Q15, int(psNLSF_CB.Order))
 	err_Q24 = (*int32)(libc.Malloc(int(uintptr(psNLSF_CB.NVectors) * unsafe.Sizeof(int32(0)))))
 	silk_NLSF_VQ([]int32(err_Q24), []int16(pNLSF_Q15), []uint8(psNLSF_CB.CB1_NLSF_Q8), psNLSF_CB.CB1_Wght_Q9, int(psNLSF_CB.NVectors), int(psNLSF_CB.Order))
 	tempIndices1 = (*int)(libc.Malloc(nSurvivors * int(unsafe.Sizeof(int(0)))))
-	silk_insertion_sort_increasing(err_Q24, tempIndices1, int(psNLSF_CB.NVectors), nSurvivors)
+	silk_insertion_sort_increasing([]int32(err_Q24), []int(tempIndices1), int(psNLSF_CB.NVectors), nSurvivors)
 	RD_Q25 = (*int32)(libc.Malloc(nSurvivors * int(unsafe.Sizeof(int32(0)))))
 	tempIndices2 = (*int8)(libc.Malloc((nSurvivors * MAX_LPC_ORDER) * int(unsafe.Sizeof(int8(0)))))
 	for s = 0; s < nSurvivors; s++ {
@@ -56,10 +56,10 @@ func silk_NLSF_encode(NLSFIndices *int8, pNLSF_Q15 *int16, psNLSF_CB *silk_NLSF_
 		bits_q7 = (8 << 7) - int(silk_lin2log(int32(prob_Q8)))
 		*(*int32)(unsafe.Add(unsafe.Pointer(RD_Q25), unsafe.Sizeof(int32(0))*uintptr(s))) = int32(int(*(*int32)(unsafe.Add(unsafe.Pointer(RD_Q25), unsafe.Sizeof(int32(0))*uintptr(s)))) + int(int32(int16(bits_q7)))*int(int32(int16(NLSF_mu_Q20>>2))))
 	}
-	silk_insertion_sort_increasing(RD_Q25, &bestIndex, nSurvivors, 1)
+	silk_insertion_sort_increasing([]int32(RD_Q25), []int(&bestIndex), nSurvivors, 1)
 	*NLSFIndices = int8(*(*int)(unsafe.Add(unsafe.Pointer(tempIndices1), unsafe.Sizeof(int(0))*uintptr(bestIndex))))
 	libc.MemCpy(unsafe.Pointer((*int8)(unsafe.Add(unsafe.Pointer(NLSFIndices), 1))), unsafe.Pointer((*int8)(unsafe.Add(unsafe.Pointer(tempIndices2), bestIndex*MAX_LPC_ORDER))), int(uintptr(psNLSF_CB.Order)*unsafe.Sizeof(int8(0))))
-	silk_NLSF_decode(pNLSF_Q15, NLSFIndices, psNLSF_CB)
+	silk_NLSF_decode([]int16(pNLSF_Q15), []int8(NLSFIndices), psNLSF_CB)
 	ret = *(*int32)(unsafe.Add(unsafe.Pointer(RD_Q25), unsafe.Sizeof(int32(0))*0))
 	return ret
 }

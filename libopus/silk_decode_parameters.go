@@ -15,7 +15,7 @@ func silk_decode_parameters(psDec *silk_decoder_state, psDecCtrl *silk_decoder_c
 		cbk_ptr_Q7 *int8
 	)
 	silk_gains_dequant(psDecCtrl.Gains_Q16, psDec.Indices.GainsIndices, &psDec.LastGainIndex, int(libc.BoolToInt(condCoding == CODE_CONDITIONALLY)), psDec.Nb_subfr)
-	silk_NLSF_decode(&pNLSF_Q15[0], &psDec.Indices.NLSFIndices[0], psDec.PsNLSF_CB)
+	silk_NLSF_decode(pNLSF_Q15[:], psDec.Indices.NLSFIndices[:], psDec.PsNLSF_CB)
 	silk_NLSF2A(&psDecCtrl.PredCoef_Q12[1][0], &pNLSF_Q15[0], psDec.LPC_order, psDec.Arch)
 	if psDec.First_frame_after_reset == 1 {
 		psDec.Indices.NLSFInterpCoef_Q2 = 4

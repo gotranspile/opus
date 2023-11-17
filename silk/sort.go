@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_insertion_sort_increasing(a []int32, idx []int, L int, K int) {
 	var (
