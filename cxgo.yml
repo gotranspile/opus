@@ -363,6 +363,10 @@ files:
     disabled: true # DONE
   - name: silk/PLC.c
     disabled: true # DONE
+  - name: silk/CNG.c
+    disabled: true # DONE
+  - name: silk/init_decoder.c
+    disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
