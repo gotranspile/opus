@@ -349,6 +349,8 @@ files:
     disabled: true # DONE
   - name: silk/decode_core.c
     disabled: true # DONE
+  - name: silk/decode_parameters.c
+    disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
   - name: celt/arch.h
