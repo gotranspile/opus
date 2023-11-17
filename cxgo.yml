@@ -164,6 +164,28 @@ idents:
     fields:
       - name: samplesOut
         type: slice
+  - name: combine_pulses
+    fields:
+      - name: out
+        type: slice
+      - name: in
+        type: slice
+  - name: encode_split
+    fields:
+      - name: shell_table
+        type: slice
+  - name: decode_split
+    fields:
+      - name: shell_table
+        type: slice
+  - name: silk_shell_encoder
+    fields:
+      - name: pulses0
+        type: slice
+  - name: silk_shell_decoder
+    fields:
+      - name: pulses0
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |

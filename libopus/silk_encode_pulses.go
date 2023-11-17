@@ -122,7 +122,7 @@ func silk_encode_pulses(psRangeEnc *ec_enc, signalType int, quantOffsetType int,
 	}
 	for i = 0; i < iter; i++ {
 		if *(*int)(unsafe.Add(unsafe.Pointer(sum_pulses), unsafe.Sizeof(int(0))*uintptr(i))) > 0 {
-			silk_shell_encoder(psRangeEnc, (*int)(unsafe.Add(unsafe.Pointer(abs_pulses), unsafe.Sizeof(int(0))*uintptr(i*SHELL_CODEC_FRAME_LENGTH))))
+			silk_shell_encoder(psRangeEnc, []int((*int)(unsafe.Add(unsafe.Pointer(abs_pulses), unsafe.Sizeof(int(0))*uintptr(i*SHELL_CODEC_FRAME_LENGTH)))))
 		}
 	}
 	for i = 0; i < iter; i++ {

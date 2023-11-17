@@ -35,7 +35,7 @@ func silk_decode_pulses(psRangeDec *ec_dec, pulses []int16, signalType int, quan
 	}
 	for i = 0; i < iter; i++ {
 		if sum_pulses[i] > 0 {
-			silk_shell_decoder(&pulses[int(int32(int16(i)))*SHELL_CODEC_FRAME_LENGTH], psRangeDec, sum_pulses[i])
+			silk_shell_decoder([]int16(&pulses[int(int32(int16(i)))*SHELL_CODEC_FRAME_LENGTH]), psRangeDec, sum_pulses[i])
 		} else {
 			libc.MemSet(unsafe.Pointer(&pulses[int(int32(int16(i)))*SHELL_CODEC_FRAME_LENGTH]), 0, int(SHELL_CODEC_FRAME_LENGTH*unsafe.Sizeof(int16(0))))
 		}
