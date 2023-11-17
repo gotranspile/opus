@@ -183,7 +183,7 @@ func silk_PLC_conceal(psDec *silk_decoder_state, psDecCtrl *silk_decoder_control
 	} else {
 		rand_Gain_Q15 = int32(PLC_RAND_ATTENUATE_UV_Q15[silk_min_int(int(NB_ATT-1), psDec.LossCnt)])
 	}
-	silk_bwexpander(&psPLC.PrevLPC_Q12[0], psDec.LPC_order, int32(math.Floor(BWE_COEF*(1<<16)+0.5)))
+	silk_bwexpander(psPLC.PrevLPC_Q12[:], psDec.LPC_order, int32(math.Floor(BWE_COEF*(1<<16)+0.5)))
 	libc.MemCpy(unsafe.Pointer(&A_Q12[0]), unsafe.Pointer(&psPLC.PrevLPC_Q12[0]), psDec.LPC_order*int(unsafe.Sizeof(int16(0))))
 	if psDec.LossCnt == 0 {
 		rand_scale_Q14 = 1 << 14

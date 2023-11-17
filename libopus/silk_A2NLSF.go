@@ -158,7 +158,7 @@ func silk_A2NLSF(NLSF *int16, a_Q16 *int32, d int) {
 					}
 					return
 				}
-				silk_bwexpander_32(a_Q16, d, int32(65536-int(int32(1<<i))))
+				silk_bwexpander_32([]int32(a_Q16), d, int32(65536-int(int32(1<<i))))
 				silk_A2NLSF_init(a_Q16, &P[0], &Q[0], dd)
 				p = &P[0]
 				xlo = int32(silk_LSFCosTab_FIX_Q12[0])

@@ -39,7 +39,7 @@ func silk_LPC_fit(a_QOUT *int16, a_QIN *int32, QOUT int, QIN int, d int) {
 				maxabs = 163838
 			}
 			chirp_Q16 = int32(int(int32(math.Floor(0.999*(1<<16)+0.5))) - int(int32(int(int32(int(uint32(int32(int(maxabs)-silk_int16_MAX)))<<14))/((int(maxabs)*(idx+1))>>2))))
-			silk_bwexpander_32(a_QIN, d, chirp_Q16)
+			silk_bwexpander_32([]int32(a_QIN), d, chirp_Q16)
 		} else {
 			break
 		}

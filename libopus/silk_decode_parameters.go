@@ -30,8 +30,8 @@ func silk_decode_parameters(psDec *silk_decoder_state, psDecCtrl *silk_decoder_c
 	}
 	libc.MemCpy(unsafe.Pointer(&psDec.PrevNLSF_Q15[0]), unsafe.Pointer(&pNLSF_Q15[0]), psDec.LPC_order*int(unsafe.Sizeof(int16(0))))
 	if psDec.LossCnt != 0 {
-		silk_bwexpander(&psDecCtrl.PredCoef_Q12[0][0], psDec.LPC_order, BWE_AFTER_LOSS_Q16)
-		silk_bwexpander(&psDecCtrl.PredCoef_Q12[1][0], psDec.LPC_order, BWE_AFTER_LOSS_Q16)
+		silk_bwexpander(psDecCtrl.PredCoef_Q12[0][:], psDec.LPC_order, BWE_AFTER_LOSS_Q16)
+		silk_bwexpander(psDecCtrl.PredCoef_Q12[1][:], psDec.LPC_order, BWE_AFTER_LOSS_Q16)
 	}
 	if int(psDec.Indices.SignalType) == TYPE_VOICED {
 		silk_decode_pitch(psDec.Indices.LagIndex, psDec.Indices.ContourIndex, psDecCtrl.PitchL[:], psDec.Fs_kHz, psDec.Nb_subfr)

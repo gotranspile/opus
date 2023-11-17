@@ -192,6 +192,14 @@ idents:
         type: slice
       - name: pulses_in
         type: slice
+  - name: silk_bwexpander
+    fields:
+      - name: ar
+        type: slice
+  - name: silk_bwexpander_32
+    fields:
+      - name: ar
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -272,6 +280,10 @@ files:
   - name: silk/shell_encoder.c
     disabled: true # DONE
   - name: silk/gain_quant.c
+    disabled: true # DONE
+  - name: silk/bwexpander.c
+    disabled: true # DONE
+  - name: silk/bwexpander_32.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====

@@ -81,7 +81,7 @@ func silk_NLSF2A(a_Q12 *int16, NLSF *int16, d int, arch int) {
 		_ = arch
 		return silk_LPC_inverse_pred_gain_c(a_Q12, d)
 	}()) == 0 && i < MAX_LPC_STABILIZE_ITERATIONS; i++ {
-		silk_bwexpander_32(&a32_NLSF2A_QA1[0], d, int32(65536-int(int32(2<<i))))
+		silk_bwexpander_32(a32_NLSF2A_QA1[:], d, int32(65536-int(int32(2<<i))))
 		for k = 0; k < d; k++ {
 			if (int(NLSF2A_QA+1) - 12) == 1 {
 				*(*int16)(unsafe.Add(unsafe.Pointer(a_Q12), unsafe.Sizeof(int16(0))*uintptr(k))) = int16((int(a32_NLSF2A_QA1[k]) >> 1) + (int(a32_NLSF2A_QA1[k]) & 1))
