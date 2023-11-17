@@ -7,6 +7,3 @@ import (
 func silk_encode_signs(psRangeEnc *ec_enc, pulses []int8, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
 	silk.EncodeSigns(psRangeEnc, pulses, length, signalType, quantOffsetType, sum_pulses)
 }
-func silk_decode_signs(psRangeDec *ec_dec, pulses []int16, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
-	silk.DecodeSigns(psRangeDec, pulses, length, signalType, quantOffsetType, sum_pulses)
-}

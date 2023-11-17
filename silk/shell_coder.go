@@ -51,7 +51,7 @@ func ShellEncoder(psRangeEnc *celt.ECEnc, pulses0 []int) {
 	encode_split(psRangeEnc, pulses0[12], pulses1[6], silk_shell_code_table0[:])
 	encode_split(psRangeEnc, pulses0[14], pulses1[7], silk_shell_code_table0[:])
 }
-func ShellDecoder(pulses0 []int16, psRangeDec *celt.ECDec, pulses4 int) {
+func shellDecoder(pulses0 []int16, psRangeDec *celt.ECDec, pulses4 int) {
 	var (
 		pulses3 [2]int16
 		pulses2 [4]int16

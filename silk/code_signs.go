@@ -29,7 +29,7 @@ func EncodeSigns(psRangeEnc *celt.ECEnc, pulses []int8, length int, signalType i
 		q_ptr = q_ptr[SHELL_CODEC_FRAME_LENGTH:]
 	}
 }
-func DecodeSigns(psRangeDec *celt.ECDec, pulses []int16, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
+func decodeSigns(psRangeDec *celt.ECDec, pulses []int16, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
 	var (
 		p    int
 		icdf [2]uint8
