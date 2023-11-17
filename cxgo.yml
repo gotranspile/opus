@@ -186,6 +186,12 @@ idents:
     fields:
       - name: pulses0
         type: slice
+  - name: combine_and_check
+    fields:
+      - name: pulses_comb
+        type: slice
+      - name: pulses_in
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -258,6 +264,12 @@ files:
   - name: silk/decode_indices.c
     disabled: true # DONE
   - name: silk/code_signs.c
+    disabled: true # DONE
+  - name: silk/decode_pulses.c
+    disabled: true # DONE
+  - name: silk/encode_pulses.c
+    disabled: true # DONE
+  - name: silk/shell_encoder.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
