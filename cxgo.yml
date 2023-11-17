@@ -321,7 +321,7 @@ files:
     disabled: true # DONE
   - name: silk/encode_pulses.c
     disabled: true # DONE
-  - name: silk/shell_encoder.c
+  - name: silk/shell_coder.c
     disabled: true # DONE
   - name: silk/gain_quant.c
     disabled: true # DONE
@@ -336,6 +336,8 @@ files:
   - name: silk/NLSF2A.c
     disabled: true # DONE
   - name: silk/LPC_fit.c
+    disabled: true # DONE
+  - name: silk/decode_pitch.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
