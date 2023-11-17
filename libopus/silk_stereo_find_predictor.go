@@ -13,8 +13,8 @@ func silk_stereo_find_predictor(ratio_Q14 *int32, x []int16, y []int16, mid_res_
 		pred_Q13  int32
 		pred2_Q10 int32
 	)
-	silk_sum_sqr_shift(&nrgx, &scale1, &x[0], length)
-	silk_sum_sqr_shift(&nrgy, &scale2, &y[0], length)
+	silk_sum_sqr_shift(&nrgx, &scale1, x, length)
+	silk_sum_sqr_shift(&nrgy, &scale2, y, length)
 	scale = silk_max_int(scale1, scale2)
 	scale = scale + (scale & 1)
 	nrgy = int32(int(nrgy) >> (scale - scale2))

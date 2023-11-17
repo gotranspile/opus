@@ -252,6 +252,16 @@ idents:
         type: slice
       - name: B
         type: slice
+  - name: silk_sum_sqr_shift
+    fields:
+      - name: x
+        type: slice
+  - name: silk_PLC_energy
+    fields:
+      - name: exc_Q14
+        type: slice
+      - name: prevGain_Q10
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -350,6 +360,8 @@ files:
   - name: silk/decode_core.c
     disabled: true # DONE
   - name: silk/decode_parameters.c
+    disabled: true # DONE
+  - name: silk/PLC.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====

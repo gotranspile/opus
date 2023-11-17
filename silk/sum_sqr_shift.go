@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_sum_sqr_shift(energy *int32, shift *int, x []int16, len_ int) {
 	var (
