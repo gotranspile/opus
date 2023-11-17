@@ -157,7 +157,7 @@ func silk_NSQ_del_dec_c(psEncC *silk_encoder_state, NSQ *silk_nsq_state, psIndic
 					subfr = 0
 				}
 				start_idx = psEncC.Ltp_mem_length - lag - psEncC.PredictLPCOrder - int(LTP_ORDER/2)
-				silk_LPC_analysis_filter((*int16)(unsafe.Add(unsafe.Pointer(sLTP), unsafe.Sizeof(int16(0))*uintptr(start_idx))), &NSQ.Xq[start_idx+k*psEncC.Subfr_length], A_Q12, int32(psEncC.Ltp_mem_length-start_idx), int32(psEncC.PredictLPCOrder), psEncC.Arch)
+				silk_LPC_analysis_filter([]int16((*int16)(unsafe.Add(unsafe.Pointer(sLTP), unsafe.Sizeof(int16(0))*uintptr(start_idx)))), []int16(&NSQ.Xq[start_idx+k*psEncC.Subfr_length]), []int16(A_Q12), int32(psEncC.Ltp_mem_length-start_idx), int32(psEncC.PredictLPCOrder), psEncC.Arch)
 				NSQ.SLTP_buf_idx = psEncC.Ltp_mem_length
 				NSQ.Rewhite_flag = 1
 			}

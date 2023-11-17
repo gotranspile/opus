@@ -244,6 +244,14 @@ idents:
     fields:
       - name: A_Q12
         type: slice
+  - name: silk_LPC_analysis_filter
+    fields:
+      - name: out
+        type: slice
+      - name: in
+        type: slice
+      - name: B
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -338,6 +346,8 @@ files:
   - name: silk/LPC_fit.c
     disabled: true # DONE
   - name: silk/decode_pitch.c
+    disabled: true # DONE
+  - name: silk/decode_core.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====

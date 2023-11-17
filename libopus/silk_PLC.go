@@ -1,10 +1,9 @@
 package libopus
 
 import (
+	"github.com/gotranspile/cxgo/runtime/libc"
 	"math"
 	"unsafe"
-
-	"github.com/gotranspile/cxgo/runtime/libc"
 )
 
 const BWE_COEF = 0.99
@@ -217,7 +216,7 @@ func silk_PLC_conceal(psDec *silk_decoder_state, psDecCtrl *silk_decoder_control
 	}
 	sLTP_buf_idx = psDec.Ltp_mem_length
 	idx = psDec.Ltp_mem_length - lag - psDec.LPC_order - int(LTP_ORDER/2)
-	silk_LPC_analysis_filter((*int16)(unsafe.Add(unsafe.Pointer(sLTP), unsafe.Sizeof(int16(0))*uintptr(idx))), &psDec.OutBuf[idx], &A_Q12[0], int32(psDec.Ltp_mem_length-idx), int32(psDec.LPC_order), arch)
+	silk_LPC_analysis_filter([]int16((*int16)(unsafe.Add(unsafe.Pointer(sLTP), unsafe.Sizeof(int16(0))*uintptr(idx)))), []int16(&psDec.OutBuf[idx]), A_Q12[:], int32(psDec.Ltp_mem_length-idx), int32(psDec.LPC_order), arch)
 	inv_gain_Q30 = silk_INVERSE32_varQ(psPLC.PrevGain_Q16[1], 46)
 	if int(inv_gain_Q30) < (int(silk_int32_MAX >> 1)) {
 		inv_gain_Q30 = inv_gain_Q30
