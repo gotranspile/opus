@@ -105,7 +105,7 @@ func GainsDequant(gain_Q16 [4]int32, ind [4]int8, prev_ind *int8, conditional in
 		gain_Q16[k] = silk_log2lin(silk_min_32(int32(int(int32(((((((int(MAX_QGAIN_DB-MIN_QGAIN_DB))*128)/6)*65536)/(int(N_LEVELS_QGAIN-1)))*int(int64(int16(*prev_ind))))>>16))+((int(MIN_QGAIN_DB*128))/6+16*128)), 3967))
 	}
 }
-func silk_gains_ID(ind [4]int8, nb_subfr int) int32 {
+func GainsID(ind [4]int8, nb_subfr int) int32 {
 	var gainsID int32
 	for k := 0; k < nb_subfr; k++ {
 		gainsID = int32(int(ind[k]) + int(int32(int(uint32(gainsID))<<8)))

@@ -293,7 +293,6 @@ files:
   - name: src/opus_encoder.c
   - name: src/repacketizer.c
   # ==== SILK ====
-  - name: silk/control.h
   - name: silk/macros.h
   - name: silk/define.h
     replace:
@@ -366,6 +365,10 @@ files:
   - name: silk/CNG.c
     disabled: true # DONE
   - name: silk/init_decoder.c
+    disabled: true # DONE
+  - name: silk/control.h
+    disabled: true # DONE
+  - name: silk/decode_frame.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====
