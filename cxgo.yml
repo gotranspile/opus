@@ -222,6 +222,28 @@ idents:
         type: slice
       - name: idx
         type: slice
+  - name: silk_NLSF2A_find_poly
+    fields:
+      - name: out
+        type: slice
+      - name: cLSF
+        type: slice
+  - name: silk_NLSF2A
+    fields:
+      - name: a_Q12
+        type: slice
+      - name: NLSF
+        type: slice
+  - name: silk_LPC_fit
+    fields:
+      - name: a_QOUT
+        type: slice
+      - name: a_QIN
+        type: slice
+  - name: silk_LPC_inverse_pred_gain_c
+    fields:
+      - name: A_Q12
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -310,6 +332,10 @@ files:
   - name: silk/NLSF_decode.c
     disabled: true # DONE
   - name: silk/NLSF_stabilize.c
+    disabled: true # DONE
+  - name: silk/NLSF2A.c
+    disabled: true # DONE
+  - name: silk/LPC_fit.c
     disabled: true # DONE
   - name: silk/*.c
   # ==== CELT ====

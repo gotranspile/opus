@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 import "math"
 
@@ -18,7 +18,8 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 	)
 	invGain_Q30 = int32(math.Floor(1*(1<<30) + 0.5))
 	for k = order - 1; k > 0; k-- {
-		if int(A_QA[k]) > int(int32(float64(int(1<<QA))*0.99975+0.5)) || int(A_QA[k]) < int(-(int32(float64(int(1<<QA))*0.99975+0.5))) {
+		tf := float64(int(1<<QA))*0.99975 + 0.5
+		if int(A_QA[k]) > int(int32(tf)) || int(A_QA[k]) < int(-(int32(tf))) {
 			return 0
 		}
 		rc_Q31 = -(int32(int(uint32(A_QA[k])) << (int(31 - QA))))
@@ -67,7 +68,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp2) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp1) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -103,7 +104,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp2) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp1) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -141,7 +142,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp2) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp1) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -151,7 +152,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 					}()))
 				}()) * int64(rc_mult2)) >> int64(mult2Q-1)) + 1) >> 1
 			}
-			if tmp64 > silk_int32_MAX || tmp64 < int64(math.MinInt32) {
+			if tmp64 > math.MaxInt32 || tmp64 < int64(math.MinInt32) {
 				return 0
 			}
 			A_QA[n] = int32(tmp64)
@@ -184,7 +185,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp1) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp2) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -220,7 +221,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp1) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp2) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -258,7 +259,7 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 						}
 						return (((int64(tmp1) * int64(rc_Q31)) >> (31 - 1)) + 1) >> 1
 					}())) & 0x80000000) != 0 {
-						return silk_int32_MAX
+						return math.MaxInt32
 					}
 					return int(tmp2) - int(int32(func() int64 {
 						if 31 == 1 {
@@ -268,13 +269,14 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 					}()))
 				}()) * int64(rc_mult2)) >> int64(mult2Q-1)) + 1) >> 1
 			}
-			if tmp64 > silk_int32_MAX || tmp64 < int64(math.MinInt32) {
+			if tmp64 > math.MaxInt32 || tmp64 < int64(math.MinInt32) {
 				return 0
 			}
 			A_QA[k-n-1] = int32(tmp64)
 		}
 	}
-	if int(A_QA[k]) > int(int32(float64(int(1<<QA))*0.99975+0.5)) || int(A_QA[k]) < int(-(int32(float64(int(1<<QA))*0.99975+0.5))) {
+	tf := float64(int(1<<QA))*0.99975 + 0.5
+	if int(A_QA[k]) > int(int32(tf)) || int(A_QA[k]) < int(-(int32(tf))) {
 		return 0
 	}
 	rc_Q31 = -(int32(int(uint32(A_QA[0])) << (int(31 - QA))))
@@ -287,11 +289,10 @@ func LPC_inverse_pred_gain_QA_c(A_QA [24]int32, order int) int32 {
 }
 func silk_LPC_inverse_pred_gain_c(A_Q12 []int16, order int) int32 {
 	var (
-		k       int
 		Atmp_QA [24]int32
-		DC_resp int32 = 0
+		DC_resp int32
 	)
-	for k = 0; k < order; k++ {
+	for k := 0; k < order; k++ {
 		DC_resp += int32(A_Q12[k])
 		Atmp_QA[k] = int32(int(uint32(int32(A_Q12[k]))) << (int(QA - 12)))
 	}

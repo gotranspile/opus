@@ -91,7 +91,7 @@ func silk_CNG(psDec *silk_decoder_state, psDecCtrl *silk_decoder_control, frame 
 		}
 		gain_Q10 = int32(int(gain_Q16) >> 6)
 		silk_CNG_exc([]int32((*int32)(unsafe.Add(unsafe.Pointer(CNG_sig_Q14), unsafe.Sizeof(int32(0))*uintptr(MAX_LPC_ORDER)))), psCNG.CNG_exc_buf_Q14[:], length, &psCNG.Rand_seed)
-		silk_NLSF2A(&A_Q12[0], &psCNG.CNG_smth_NLSF_Q15[0], psDec.LPC_order, psDec.Arch)
+		silk_NLSF2A(A_Q12[:], psCNG.CNG_smth_NLSF_Q15[:], psDec.LPC_order, psDec.Arch)
 		libc.MemCpy(unsafe.Pointer(CNG_sig_Q14), unsafe.Pointer(&psCNG.CNG_synth_state[0]), int(MAX_LPC_ORDER*unsafe.Sizeof(int32(0))))
 		for i = 0; i < length; i++ {
 			LPC_pred_Q10 = int32(psDec.LPC_order >> 1)

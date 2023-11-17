@@ -1,8 +1,9 @@
 package libopus
 
 import (
-	"github.com/gotranspile/cxgo/runtime/libc"
 	"unsafe"
+
+	"github.com/gotranspile/cxgo/runtime/libc"
 )
 
 func silk_decode_parameters(psDec *silk_decoder_state, psDecCtrl *silk_decoder_control, condCoding int) {
@@ -16,7 +17,7 @@ func silk_decode_parameters(psDec *silk_decoder_state, psDecCtrl *silk_decoder_c
 	)
 	silk_gains_dequant(psDecCtrl.Gains_Q16, psDec.Indices.GainsIndices, &psDec.LastGainIndex, int(libc.BoolToInt(condCoding == CODE_CONDITIONALLY)), psDec.Nb_subfr)
 	silk_NLSF_decode(pNLSF_Q15[:], psDec.Indices.NLSFIndices[:], psDec.PsNLSF_CB)
-	silk_NLSF2A(&psDecCtrl.PredCoef_Q12[1][0], &pNLSF_Q15[0], psDec.LPC_order, psDec.Arch)
+	silk_NLSF2A(psDecCtrl.PredCoef_Q12[1][:], pNLSF_Q15[:], psDec.LPC_order, psDec.Arch)
 	if psDec.First_frame_after_reset == 1 {
 		psDec.Indices.NLSFInterpCoef_Q2 = 4
 	}
@@ -24,7 +25,7 @@ func silk_decode_parameters(psDec *silk_decoder_state, psDecCtrl *silk_decoder_c
 		for i = 0; i < psDec.LPC_order; i++ {
 			pNLSF0_Q15[i] = int16(int(psDec.PrevNLSF_Q15[i]) + ((int(psDec.Indices.NLSFInterpCoef_Q2) * (int(pNLSF_Q15[i]) - int(psDec.PrevNLSF_Q15[i]))) >> 2))
 		}
-		silk_NLSF2A(&psDecCtrl.PredCoef_Q12[0][0], &pNLSF0_Q15[0], psDec.LPC_order, psDec.Arch)
+		silk_NLSF2A(psDecCtrl.PredCoef_Q12[0][:], pNLSF0_Q15[:], psDec.LPC_order, psDec.Arch)
 	} else {
 		libc.MemCpy(unsafe.Pointer(&(psDecCtrl.PredCoef_Q12[0])[0]), unsafe.Pointer(&(psDecCtrl.PredCoef_Q12[1])[0]), psDec.LPC_order*int(unsafe.Sizeof(int16(0))))
 	}
