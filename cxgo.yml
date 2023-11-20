@@ -415,6 +415,8 @@ files:
     disabled: true # DONE
   - name: silk/resampler.c
     disabled: true # DONE
+  - name: silk/decoder_set_fs.c
+    disabled: true # DONE
 
   - name: silk/*.c
 
