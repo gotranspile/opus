@@ -419,6 +419,8 @@ files:
     disabled: true # DONE
   - name: silk/stereo_MS_to_LR.c
     disabled: true # DONE
+  - name: silk/dec_API.c
+    disabled: true # DONE
 
   - name: silk/*.c
 
