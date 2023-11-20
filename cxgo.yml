@@ -262,6 +262,38 @@ idents:
         type: slice
       - name: prevGain_Q10
         type: slice
+  - name: silk_resampler_private_up2_HQ
+    fields:
+      - name: S
+        type: slice
+      - name: out
+        type: slice
+      - name: in
+        type: slice
+  - name: silk_resampler_private_up2_HQ_wrapper
+    fields:
+      - name: out
+        type: slice
+      - name: in
+        type: slice
+  - name: silk_resampler_private_IIR_FIR_INTERPOL
+    fields:
+      - name: out
+        type: slice
+      - name: buf
+        type: slice
+      - name: return
+        type: slice
+  - name: silk_resampler_private_down_FIR_INTERPOL
+    fields:
+      - name: out
+        type: slice
+      - name: buf
+        type: slice
+      - name: FIR_Coefs
+        type: slice
+      - name: return
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -292,6 +324,7 @@ files:
   - name: src/opus_decoder.c
   - name: src/opus_encoder.c
   - name: src/repacketizer.c
+
   # ==== SILK ====
   - name: silk/macros.h
   - name: silk/define.h
@@ -370,7 +403,21 @@ files:
     disabled: true # DONE
   - name: silk/decode_frame.c
     disabled: true # DONE
+  - name: silk/decode_frame.c
+    disabled: true # DONE
+  - name: silk/resampler_private_up2_HQ.c
+    disabled: true # DONE
+  - name: silk/resampler_private_IIR_FIR.c
+    disabled: true # DONE
+  - name: silk/resampler_private_AR2.c
+    disabled: true # DONE
+  - name: silk/resampler_private_down_FIR.c
+    disabled: true # DONE
+  - name: silk/resampler.c
+    disabled: true # DONE
+
   - name: silk/*.c
+
   # ==== CELT ====
   - name: celt/arch.h
   - name: celt/entcode.c
