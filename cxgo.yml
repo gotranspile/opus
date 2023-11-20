@@ -417,6 +417,8 @@ files:
     disabled: true # DONE
   - name: silk/decoder_set_fs.c
     disabled: true # DONE
+  - name: silk/stereo_MS_to_LR.c
+    disabled: true # DONE
 
   - name: silk/*.c
 
