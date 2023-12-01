@@ -16,13 +16,10 @@ type Decoder struct {
 	Prev_decode_only_middle int
 }
 
-func GetDecoderSize(decSizeBytes *int) int {
-	var ret int = SILK_NO_ERROR
-	*decSizeBytes = int(unsafe.Sizeof(Decoder{}))
-	return ret
+func GetDecoderSize() int {
+	return int(unsafe.Sizeof(Decoder{}))
 }
-func InitDecoder(decState unsafe.Pointer) int {
-	dec := (*Decoder)(decState)
+func (dec *Decoder) Init() int {
 	for i := 0; i < DECODER_NUM_CHANNELS; i++ {
 		dec.Channel_state[i].Init()
 	}
@@ -30,7 +27,7 @@ func InitDecoder(decState unsafe.Pointer) int {
 	dec.Prev_decode_only_middle = 0
 	return SILK_NO_ERROR
 }
-func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *celt.ECDec, samplesOut []int16, nSamplesOut *int32, arch int) int {
+func (dec *Decoder) Decode(decControl *DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *celt.ECDec, samplesOut []int16, nSamplesOut *int32, arch int) int {
 	var (
 		i                  int
 		n                  int
@@ -39,10 +36,9 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 		nSamplesOutDec     int32
 		LBRR_symbol        int32
 		samplesOut1_tmp    [2][]int16
-		MS_pred_Q13        [2]int32 = [2]int32{}
+		MS_pred_Q13        [2]int32
 		resample_out_ptr   []int16
-		psDec              = (*Decoder)(decState)
-		channel_state      = psDec.Channel_state[:]
+		channel_state      = dec.Channel_state[:]
 		has_side           int
 		delay_stack_alloc  int
 	)
@@ -51,10 +47,10 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 			channel_state[n].NFramesDecoded = 0
 		}
 	}
-	if int(decControl.NChannelsInternal) > psDec.NChannelsInternal {
+	if int(decControl.NChannelsInternal) > dec.NChannelsInternal {
 		channel_state[1].Init()
 	}
-	stereo_to_mono := decControl.NChannelsInternal == 1 && psDec.NChannelsInternal == 2 && int(decControl.InternalSampleRate) == channel_state[0].Fs_kHz*1000
+	stereo_to_mono := decControl.NChannelsInternal == 1 && dec.NChannelsInternal == 2 && int(decControl.InternalSampleRate) == channel_state[0].Fs_kHz*1000
 	if channel_state[0].NFramesDecoded == 0 {
 		for n = 0; n < int(decControl.NChannelsInternal); n++ {
 			var fs_kHz_dec int
@@ -83,13 +79,13 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 			ret += channel_state[n].SetFS(fs_kHz_dec, decControl.API_sampleRate)
 		}
 	}
-	if int(decControl.NChannelsAPI) == 2 && int(decControl.NChannelsInternal) == 2 && (psDec.NChannelsAPI == 1 || psDec.NChannelsInternal == 1) {
-		psDec.SStereo.Pred_prev_Q13 = [2]int16{}
-		psDec.SStereo.SSide = [2]int16{}
+	if int(decControl.NChannelsAPI) == 2 && int(decControl.NChannelsInternal) == 2 && (dec.NChannelsAPI == 1 || dec.NChannelsInternal == 1) {
+		dec.SStereo.Pred_prev_Q13 = [2]int16{}
+		dec.SStereo.SSide = [2]int16{}
 		channel_state[1].Resampler_state = channel_state[0].Resampler_state
 	}
-	psDec.NChannelsAPI = int(decControl.NChannelsAPI)
-	psDec.NChannelsInternal = int(decControl.NChannelsInternal)
+	dec.NChannelsAPI = int(decControl.NChannelsAPI)
+	dec.NChannelsInternal = int(decControl.NChannelsInternal)
 	if int(decControl.API_sampleRate) > int(MAX_API_FS_KHZ*1000) || int(decControl.API_sampleRate) < 8000 {
 		ret = -200
 		return ret
@@ -150,17 +146,17 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 			}
 		} else {
 			for n = 0; n < 2; n++ {
-				MS_pred_Q13[n] = int32(psDec.SStereo.Pred_prev_Q13[n])
+				MS_pred_Q13[n] = int32(dec.SStereo.Pred_prev_Q13[n])
 			}
 		}
 	}
-	if int(decControl.NChannelsInternal) == 2 && decode_only_middle == 0 && psDec.Prev_decode_only_middle == 1 {
-		*(*[480]int16)(unsafe.Pointer(&psDec.Channel_state[1].OutBuf[0])) = [480]int16{}
-		*(*[16]int32)(unsafe.Pointer(&psDec.Channel_state[1].SLPC_Q14_buf[0])) = [16]int32{}
-		psDec.Channel_state[1].LagPrev = 100
-		psDec.Channel_state[1].LastGainIndex = 10
-		psDec.Channel_state[1].PrevSignalType = TYPE_NO_VOICE_ACTIVITY
-		psDec.Channel_state[1].First_frame_after_reset = 1
+	if int(decControl.NChannelsInternal) == 2 && decode_only_middle == 0 && dec.Prev_decode_only_middle == 1 {
+		dec.Channel_state[1].OutBuf = [480]int16{}
+		dec.Channel_state[1].SLPC_Q14_buf = [16]int32{}
+		dec.Channel_state[1].LagPrev = 100
+		dec.Channel_state[1].LastGainIndex = 10
+		dec.Channel_state[1].PrevSignalType = TYPE_NO_VOICE_ACTIVITY
+		dec.Channel_state[1].First_frame_after_reset = 1
 	}
 	delay_stack_alloc = int(libc.BoolToInt(int(decControl.InternalSampleRate)*int(decControl.NChannelsInternal) < int(decControl.API_sampleRate)*int(decControl.NChannelsAPI)))
 	samplesOut1_tmp_storage1 := make([]int16, func() int {
@@ -179,7 +175,7 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 	if lostFlag == FLAG_DECODE_NORMAL {
 		has_side = int(libc.BoolToInt(decode_only_middle == 0))
 	} else {
-		has_side = int(libc.BoolToInt(psDec.Prev_decode_only_middle == 0 || int(decControl.NChannelsInternal) == 2 && lostFlag == FLAG_DECODE_LBRR && channel_state[1].LBRR_flags[channel_state[1].NFramesDecoded] == 1))
+		has_side = int(libc.BoolToInt(dec.Prev_decode_only_middle == 0 || int(decControl.NChannelsInternal) == 2 && lostFlag == FLAG_DECODE_LBRR && channel_state[1].LBRR_flags[channel_state[1].NFramesDecoded] == 1))
 	}
 	for n = 0; n < int(decControl.NChannelsInternal); n++ {
 		if n == 0 || has_side != 0 {
@@ -196,7 +192,7 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 				} else {
 					condCoding = CODE_INDEPENDENTLY
 				}
-			} else if n > 0 && psDec.Prev_decode_only_middle != 0 {
+			} else if n > 0 && dec.Prev_decode_only_middle != 0 {
 				condCoding = CODE_INDEPENDENTLY_NO_LTP_SCALING
 			} else {
 				condCoding = CODE_CONDITIONALLY
@@ -208,12 +204,12 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 		channel_state[n].NFramesDecoded++
 	}
 	if int(decControl.NChannelsAPI) == 2 && int(decControl.NChannelsInternal) == 2 {
-		StereoMStoLR(&psDec.SStereo, samplesOut1_tmp[0], samplesOut1_tmp[1], MS_pred_Q13[:], channel_state[0].Fs_kHz, int(nSamplesOutDec))
+		StereoMStoLR(&dec.SStereo, samplesOut1_tmp[0], samplesOut1_tmp[1], MS_pred_Q13[:], channel_state[0].Fs_kHz, int(nSamplesOutDec))
 	} else {
-		libc.MemCpy(unsafe.Pointer(&samplesOut1_tmp[0]), unsafe.Pointer(&psDec.SStereo.SMid[0]), int(2*unsafe.Sizeof(int16(0))))
-		libc.MemCpy(unsafe.Pointer(&psDec.SStereo.SMid[0]), unsafe.Pointer(&samplesOut1_tmp[0][nSamplesOutDec]), int(2*unsafe.Sizeof(int16(0))))
+		libc.MemCpy(unsafe.Pointer(&samplesOut1_tmp[0]), unsafe.Pointer(&dec.SStereo.SMid[0]), int(2*unsafe.Sizeof(int16(0))))
+		libc.MemCpy(unsafe.Pointer(&dec.SStereo.SMid[0]), unsafe.Pointer(&samplesOut1_tmp[0][nSamplesOutDec]), int(2*unsafe.Sizeof(int16(0))))
 	}
-	*nSamplesOut = int32((int(nSamplesOutDec) * int(decControl.API_sampleRate)) / (int(int32(int16(channel_state[0].Fs_kHz))) * 1000))
+	*nSamplesOut = int32((int(nSamplesOutDec) * int(decControl.API_sampleRate)) / (int(int16(channel_state[0].Fs_kHz)) * 1000))
 	samplesOut2_tmp := make([]int16, func() int {
 		if int(decControl.NChannelsAPI) == 2 {
 			return int(*nSamplesOut)
@@ -251,7 +247,7 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 	}
 	if int(decControl.NChannelsAPI) == 2 && int(decControl.NChannelsInternal) == 1 {
 		if stereo_to_mono {
-			ret += channel_state[1].Resampler_state.Resample([]int16(resample_out_ptr), samplesOut1_tmp[0][1:], nSamplesOutDec)
+			ret += channel_state[1].Resampler_state.Resample(resample_out_ptr, samplesOut1_tmp[0][1:], nSamplesOutDec)
 			for i = 0; i < int(*nSamplesOut); i++ {
 				samplesOut[i*2+1] = resample_out_ptr[i]
 			}
@@ -262,17 +258,17 @@ func Decode(decState unsafe.Pointer, decControl *DecControlStruct, lostFlag int,
 		}
 	}
 	if channel_state[0].PrevSignalType == TYPE_VOICED {
-		var mult_tab [3]int = [3]int{6, 4, 3}
+		var mult_tab = [3]int{6, 4, 3}
 		decControl.PrevPitchLag = channel_state[0].LagPrev * mult_tab[(channel_state[0].Fs_kHz-8)>>2]
 	} else {
 		decControl.PrevPitchLag = 0
 	}
 	if lostFlag == FLAG_PACKET_LOST {
-		for i = 0; i < psDec.NChannelsInternal; i++ {
-			psDec.Channel_state[i].LastGainIndex = 10
+		for i = 0; i < dec.NChannelsInternal; i++ {
+			dec.Channel_state[i].LastGainIndex = 10
 		}
 	} else {
-		psDec.Prev_decode_only_middle = decode_only_middle
+		dec.Prev_decode_only_middle = decode_only_middle
 	}
 	return ret
 }

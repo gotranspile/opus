@@ -7,11 +7,12 @@ import (
 )
 
 func silk_Get_Decoder_Size(decSizeBytes *int) int {
-	return silk.GetDecoderSize(decSizeBytes)
+	*decSizeBytes = silk.GetDecoderSize()
+	return SILK_NO_ERROR
 }
 func silk_InitDecoder(decState unsafe.Pointer) int {
-	return silk.InitDecoder(decState)
+	return ((*silk.Decoder)(decState)).Init()
 }
 func silk_Decode(decState unsafe.Pointer, decControl *silk_DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *ec_dec, samplesOut []int16, nSamplesOut *int32, arch int) int {
-	return silk.Decode(decState, decControl, lostFlag, newPacketFlag, psRangeDec, samplesOut, nSamplesOut, arch)
+	return ((*silk.Decoder)(decState)).Decode(decControl, lostFlag, newPacketFlag, psRangeDec, samplesOut, nSamplesOut, arch)
 }
