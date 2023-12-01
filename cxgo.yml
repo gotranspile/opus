@@ -464,6 +464,7 @@ files:
     disabled: true # DONE
 
   - name: silk/*.c
+  - name: silk/float/*.c
 
   # ==== CELT ====
   - name: celt/arch.h
