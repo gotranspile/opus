@@ -550,6 +550,8 @@ files:
     disabled: true # DONE
   - name: silk/VQ_WMat_EC.c
     disabled: true # DONE
+  - name: silk/float/wrappers_FLP.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
