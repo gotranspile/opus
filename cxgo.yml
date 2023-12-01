@@ -454,6 +454,10 @@ files:
     disabled: true # DONE
   - name: silk/init_encoder.c
     disabled: true # DONE
+  - name: silk/control_codec.c
+    disabled: true # DONE
+  - name: silk/control_audio_bandwidth.c
+    disabled: true # DONE
 
   - name: silk/*.c
 

@@ -1,8 +1,8 @@
-package libopus
+package silk
 
 import "unsafe"
 
-func silk_control_audio_bandwidth(psEncC *silk_encoder_state, encControl *silk_EncControlStruct) int {
+func silk_control_audio_bandwidth(psEncC *EncoderState, encControl *EncControlStruct) int {
 	var (
 		fs_kHz   int
 		orig_kHz int
