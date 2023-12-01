@@ -458,6 +458,10 @@ files:
     disabled: true # DONE
   - name: silk/control_audio_bandwidth.c
     disabled: true # DONE
+  - name: silk/HP_variable_cutoff.c
+    disabled: true # DONE
+  - name: silk/stereo_encode_pred.c
+    disabled: true # DONE
 
   - name: silk/*.c
 
