@@ -11,7 +11,7 @@ func DecodeParameters(psDec *DecoderState, psDecCtrl *DecoderControl, condCoding
 		Ix         int
 		pNLSF_Q15  [16]int16
 		pNLSF0_Q15 [16]int16
-		cbk_ptr_Q7 *int8
+		cbk_ptr_Q7 []int8
 	)
 	GainsDequant(psDecCtrl.Gains_Q16, psDec.Indices.GainsIndices, &psDec.LastGainIndex, int(libc.BoolToInt(condCoding == CODE_CONDITIONALLY)), psDec.Nb_subfr)
 	NLSF_decode(pNLSF_Q15[:], psDec.Indices.NLSFIndices[:], psDec.PsNLSF_CB)
@@ -38,7 +38,7 @@ func DecodeParameters(psDec *DecoderState, psDecCtrl *DecoderControl, condCoding
 		for k := 0; k < psDec.Nb_subfr; k++ {
 			Ix = int(psDec.Indices.LTPIndex[k])
 			for i := 0; i < LTP_ORDER; i++ {
-				psDecCtrl.LTPCoef_Q14[k*LTP_ORDER+i] = int16(int32(int(uint32(*(*int8)(unsafe.Add(unsafe.Pointer(cbk_ptr_Q7), Ix*LTP_ORDER+i)))) << 7))
+				psDecCtrl.LTPCoef_Q14[k*LTP_ORDER+i] = int16(int32(int(uint32(cbk_ptr_Q7[Ix*LTP_ORDER+i])) << 7))
 			}
 		}
 		Ix = int(psDec.Indices.LTP_scaleIndex)

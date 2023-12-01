@@ -376,6 +376,18 @@ idents:
         type: slice
       - name: coef
         type: slice
+  - name: silk_VQ_WMat_EC_c
+    fields:
+      - name: XX_Q17
+        type: slice
+      - name: xX_Q17
+        type: slice
+      - name: cb_Q7
+        type: slice
+      - name: cb_gain_Q7
+        type: slice
+      - name: cl_Q5
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -533,6 +545,10 @@ files:
   - name: silk/NSQ_del_dec.c
     disabled: true # DONE
   - name: silk/NSQ.c
+    disabled: true # DONE
+  - name: silk/quant_LTP_gains.c
+    disabled: true # DONE
+  - name: silk/VQ_WMat_EC.c
     disabled: true # DONE
 
   - name: silk/*.c
