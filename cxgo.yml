@@ -358,6 +358,12 @@ idents:
         type: slice
       - name: pW_Q2
         type: slice
+  - name: silk_NLSF_VQ_weights_laroia
+    fields:
+      - name: pNLSFW_Q_OUT
+        type: slice
+      - name: pNLSF_Q15
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -418,10 +424,6 @@ files:
       #include "SigProc_FIX.h"
       #define silk_int32_MAX INT32_MAX
       #define OPUS_INLINE
-  - name: silk/NLSF2A.c
-    replace:
-      - old: QA
-        new: NLSF2A_QA
   - name: silk/NLSF_unpack.c
     disabled: true # DONE
   - name: silk/stereo_decode_pred.c
@@ -511,6 +513,10 @@ files:
   - name: silk/NLSF_del_dec_quant.c
     disabled: true # DONE
   - name: silk/NLSF_encode.c
+    disabled: true # DONE
+  - name: silk/process_NLSFs.c
+    disabled: true # DONE
+  - name: silk/NLSF_VQ_weights_laroia.c
     disabled: true # DONE
 
   - name: silk/*.c
