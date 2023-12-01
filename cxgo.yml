@@ -345,7 +345,6 @@ files:
   - name: silk/pitch_est_defines.h
   - name: silk/resampler_private.h
 #  - name: silk/resampler_structs.h # DONE
-  - name: silk/float/structs_FLP.h
   - name: silk/float/SigProc_FLP.h
   - name: silk/SigProc_FIX.h
   - name: silk/Inlines.h
@@ -422,6 +421,8 @@ files:
   - name: silk/dec_API.c
     disabled: true # DONE
   - name: silk/check_control_input.c
+    disabled: true # DONE
+  - name: silk/float/structs_FLP.h
     disabled: true # DONE
 
   - name: silk/*.c
