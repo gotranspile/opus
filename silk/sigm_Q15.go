@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 import "math"
 
@@ -6,7 +6,7 @@ var sigm_LUT_slope_Q10 [6]int32 = [6]int32{237, 153, 73, 30, 12, 7}
 var sigm_LUT_pos_Q15 [6]int32 = [6]int32{16384, 23955, 28861, 31213, 32178, 32548}
 var sigm_LUT_neg_Q15 [6]int32 = [6]int32{16384, 8812, 3906, 1554, 589, 219}
 
-func silk_sigm_Q15(in_Q5 int) int {
+func sigmQ15(in_Q5 int) int {
 	var ind int
 	if in_Q5 < 0 {
 		in_Q5 = -in_Q5

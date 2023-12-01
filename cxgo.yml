@@ -294,6 +294,16 @@ idents:
         type: slice
       - name: return
         type: slice
+  - name: silk_ana_filt_bank_1
+    fields:
+      - name: in
+        type: slice
+      - name: S
+        type: slice
+      - name: outL
+        type: slice
+      - name: outH
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -423,6 +433,14 @@ files:
   - name: silk/check_control_input.c
     disabled: true # DONE
   - name: silk/float/structs_FLP.h
+    disabled: true # DONE
+  - name: silk/VAD.c
+    disabled: true # DONE
+  - name: silk/ana_filt_bank_1.c
+    disabled: true # DONE
+  - name: silk/sigm_Q15.c
+    disabled: true # DONE
+  - name: silk/init_encoder.c
     disabled: true # DONE
 
   - name: silk/*.c
