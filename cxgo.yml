@@ -304,6 +304,18 @@ idents:
         type: slice
       - name: outH
         type: slice
+  - name: silk_float2short_array
+    fields:
+      - name: in
+        type: slice
+      - name: out
+        type: slice
+  - name: silk_short2float_array
+    fields:
+      - name: in
+        type: slice
+      - name: out
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |

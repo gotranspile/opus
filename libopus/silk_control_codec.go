@@ -64,7 +64,7 @@ func silk_setup_resamplers(psEnc *silk_encoder_state_FLP, fs_kHz int) int {
 				}
 				return int(new_buf_samples)
 			}()) * int(unsafe.Sizeof(int16(0)))))
-			silk_float2short_array(x_bufFIX, &psEnc.X_buf[0], old_buf_samples)
+			silk_float2short_array([]int16(x_bufFIX), psEnc.X_buf[:], old_buf_samples)
 			temp_resampler_state = (*silk_resampler_state_struct)(libc.Malloc(int(unsafe.Sizeof(silk_resampler_state_struct{}) * 1)))
 			ret += silk_resampler_init(temp_resampler_state, int32(int(int32(int16(psEnc.SCmn.Fs_kHz)))*1000), psEnc.SCmn.API_fs_Hz, 0)
 			api_buf_samples = int32(int(buf_length_ms) * int(int32(int(psEnc.SCmn.API_fs_Hz)/1000)))
@@ -72,7 +72,7 @@ func silk_setup_resamplers(psEnc *silk_encoder_state_FLP, fs_kHz int) int {
 			ret += silk_resampler(temp_resampler_state, []int16(x_buf_API_fs_Hz), []int16(x_bufFIX), old_buf_samples)
 			ret += silk_resampler_init(&psEnc.SCmn.Resampler_state, psEnc.SCmn.API_fs_Hz, int32(int(int32(int16(fs_kHz)))*1000), 1)
 			ret += silk_resampler(&psEnc.SCmn.Resampler_state, []int16(x_bufFIX), []int16(x_buf_API_fs_Hz), api_buf_samples)
-			silk_short2float_array(&psEnc.X_buf[0], x_bufFIX, new_buf_samples)
+			silk_short2float_array(psEnc.X_buf[:], []int16(x_bufFIX), new_buf_samples)
 		}
 	}
 	psEnc.SCmn.Prev_API_fs_Hz = psEnc.SCmn.API_fs_Hz
