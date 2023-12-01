@@ -316,6 +316,40 @@ idents:
         type: slice
       - name: out
         type: slice
+  - name: silk_A2NLSF_trans_poly
+    fields:
+      - name: p
+        type: slice
+  - name: silk_A2NLSF_eval_poly
+    fields:
+      - name: p
+        type: slice
+  - name: silk_A2NLSF_init
+    fields:
+      - name: a_Q16
+        type: slice
+      - name: P
+        type: slice
+      - name: Q
+        type: slice
+  - name: silk_A2NLSF
+    fields:
+      - name: NLSF
+        type: slice
+      - name: a_Q16
+        type: slice
+  - name: silk_A2NLSF_FLP
+    fields:
+      - name: NLSF_Q15
+        type: slice
+      - name: pAR
+        type: slice
+  - name: silk_NLSF2A_FLP
+    fields:
+      - name: pAR
+        type: slice
+      - name: NLSF_Q15
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -461,6 +495,8 @@ files:
   - name: silk/HP_variable_cutoff.c
     disabled: true # DONE
   - name: silk/stereo_encode_pred.c
+    disabled: true # DONE
+  - name: silk/A2NLSF.c
     disabled: true # DONE
 
   - name: silk/*.c

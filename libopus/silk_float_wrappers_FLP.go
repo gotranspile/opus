@@ -1,25 +1,23 @@
 package libopus
 
-import "unsafe"
-
-func silk_A2NLSF_FLP(NLSF_Q15 *int16, pAR *float32, LPC_order int) {
+func silk_A2NLSF_FLP(NLSF_Q15 []int16, pAR []float32, LPC_order int) {
 	var (
 		i         int
 		a_fix_Q16 [16]int32
 	)
 	for i = 0; i < LPC_order; i++ {
-		a_fix_Q16[i] = silk_float2int(*(*float32)(unsafe.Add(unsafe.Pointer(pAR), unsafe.Sizeof(float32(0))*uintptr(i))) * 65536.0)
+		a_fix_Q16[i] = silk_float2int(pAR[i] * 65536.0)
 	}
-	silk_A2NLSF(NLSF_Q15, &a_fix_Q16[0], LPC_order)
+	silk_A2NLSF(NLSF_Q15, a_fix_Q16[:], LPC_order)
 }
-func silk_NLSF2A_FLP(pAR *float32, NLSF_Q15 *int16, LPC_order int, arch int) {
+func silk_NLSF2A_FLP(pAR []float32, NLSF_Q15 []int16, LPC_order int, arch int) {
 	var (
 		i         int
 		a_fix_Q12 [16]int16
 	)
-	silk_NLSF2A(a_fix_Q12[:], []int16(NLSF_Q15), LPC_order, arch)
+	silk_NLSF2A(a_fix_Q12[:], NLSF_Q15, LPC_order, arch)
 	for i = 0; i < LPC_order; i++ {
-		*(*float32)(unsafe.Add(unsafe.Pointer(pAR), unsafe.Sizeof(float32(0))*uintptr(i))) = float32(a_fix_Q12[i]) * (1.0 / 4096.0)
+		pAR[i] = float32(a_fix_Q12[i]) * (1.0 / 4096.0)
 	}
 }
 func silk_process_NLSFs_FLP(psEncC *silk_encoder_state, PredCoef [2][16]float32, NLSF_Q15 [16]int16, prev_NLSF_Q15 [16]int16) {
