@@ -500,6 +500,8 @@ files:
     disabled: true # DONE
   - name: silk/NLSF_VQ.c
     disabled: true # DONE
+  - name: silk/NLSF_del_dec_quant.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
