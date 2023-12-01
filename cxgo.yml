@@ -350,6 +350,14 @@ idents:
         type: slice
       - name: NLSF_Q15
         type: slice
+  - name: silk_NLSF_encode
+    fields:
+      - name: NLSFIndices
+        type: slice
+      - name: pNLSF_Q15
+        type: slice
+      - name: pW_Q2
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -501,6 +509,8 @@ files:
   - name: silk/NLSF_VQ.c
     disabled: true # DONE
   - name: silk/NLSF_del_dec_quant.c
+    disabled: true # DONE
+  - name: silk/NLSF_encode.c
     disabled: true # DONE
 
   - name: silk/*.c

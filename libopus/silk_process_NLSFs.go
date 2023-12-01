@@ -30,7 +30,7 @@ func silk_process_NLSFs(psEncC *silk_encoder_state, PredCoef_Q12 [2][16]int16, p
 			pNLSFW_QW[i] = int16((int(pNLSFW_QW[i]) >> 1) + ((int(int32(pNLSFW0_temp_QW[i])) * int(int32(i_sqr_Q15))) >> 16))
 		}
 	}
-	silk_NLSF_encode(&psEncC.Indices.NLSFIndices[0], &pNLSF_Q15[0], psEncC.PsNLSF_CB, &pNLSFW_QW[0], NLSF_mu_Q20, psEncC.NLSF_MSVQ_Survivors, int(psEncC.Indices.SignalType))
+	silk_NLSF_encode(psEncC.Indices.NLSFIndices[:], pNLSF_Q15[:], psEncC.PsNLSF_CB, &pNLSFW_QW[0], NLSF_mu_Q20, psEncC.NLSF_MSVQ_Survivors, int(psEncC.Indices.SignalType))
 	silk_NLSF2A(PredCoef_Q12[1][:], pNLSF_Q15[:], psEncC.PredictLPCOrder, psEncC.Arch)
 	if doInterpolate != 0 {
 		silk_interpolate(pNLSF0_temp_Q15, prev_NLSFq_Q15, pNLSF_Q15, int(psEncC.Indices.NLSFInterpCoef_Q2), psEncC.PredictLPCOrder)
