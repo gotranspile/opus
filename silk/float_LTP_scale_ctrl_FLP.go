@@ -1,8 +1,8 @@
-package libopus
+package silk
 
 import "github.com/gotranspile/cxgo/runtime/libc"
 
-func silk_LTP_scale_ctrl_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *silk_encoder_control_FLP, condCoding int) {
+func silk_LTP_scale_ctrl_FLP(psEnc *EncoderStateFLP, psEncCtrl *EncoderControlFLP, condCoding int) {
 	var round_loss int
 	if condCoding == CODE_INDEPENDENTLY {
 		round_loss = psEnc.SCmn.PacketLoss_perc * psEnc.SCmn.NFramesPerPacket

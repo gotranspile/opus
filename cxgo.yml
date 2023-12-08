@@ -424,6 +424,18 @@ idents:
     fields:
       - name: data1
         type: slice
+  - name: silk_scale_copy_vector_FLP
+    fields:
+      - name: data_out
+        type: slice
+      - name: data_in
+        type: slice
+  - name: silk_LTP_analysis_filter_FLP
+    fields:
+      - name: x
+        type: slice
+      - name: LTP_res
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -601,6 +613,14 @@ files:
   - name: silk/float/scale_vector_FLP.c
     disabled: true # DONE
   - name: silk/float/corrMatrix_FLP.c
+    disabled: true # DONE
+  - name: silk/float/LTP_analysis_filter_FLP.c
+    disabled: true # DONE
+  - name: silk/float/find_pred_coefs_FLP.c
+    disabled: true # DONE
+  - name: silk/float/scale_copy_vector_FLP.c
+    disabled: true # DONE
+  - name: silk/float/LTP_scale_ctrl_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c
