@@ -8,7 +8,7 @@ import (
 
 const SCRATCH_SIZE = 22
 
-func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int16, contourIndex *int8, LTPCorr *float32, prevLag int, search_thres1 float32, search_thres2 float32, Fs_kHz int, complexity int, nb_subfr int, arch int) int {
+func silk_pitch_analysis_core_FLP(frame []float32, pitch_out []int, lagIndex *int16, contourIndex *int8, LTPCorr *float32, prevLag int, search_thres1 float32, search_thres2 float32, Fs_kHz int, complexity int, nb_subfr int, arch int) int {
 	var (
 		i                  int
 		k                  int
@@ -81,21 +81,21 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 	max_lag_8kHz = int(PE_MAX_LAG_MS*8) - 1
 	if Fs_kHz == 16 {
 		var frame_16_FIX [640]int16
-		silk_float2short_array(frame_16_FIX[:], []float32(frame), int32(frame_length))
+		silk_float2short_array(frame_16_FIX[:], frame, int32(frame_length))
 		libc.MemSet(unsafe.Pointer(&filt_state[0]), 0, int(2*unsafe.Sizeof(int32(0))))
-		silk_resampler_down2(&filt_state[0], &frame_8_FIX[0], &frame_16_FIX[0], int32(frame_length))
+		silk_resampler_down2(filt_state[:], frame_8_FIX[:], frame_16_FIX[:], int32(frame_length))
 		silk_short2float_array(frame_8kHz[:], frame_8_FIX[:], int32(frame_length_8kHz))
 	} else if Fs_kHz == 12 {
 		var frame_12_FIX [480]int16
-		silk_float2short_array(frame_12_FIX[:], []float32(frame), int32(frame_length))
+		silk_float2short_array(frame_12_FIX[:], frame, int32(frame_length))
 		libc.MemSet(unsafe.Pointer(&filt_state[0]), 0, int(6*unsafe.Sizeof(int32(0))))
-		silk_resampler_down2_3(&filt_state[0], &frame_8_FIX[0], &frame_12_FIX[0], int32(frame_length))
+		silk_resampler_down2_3(filt_state[:], frame_8_FIX[:], frame_12_FIX[:], int32(frame_length))
 		silk_short2float_array(frame_8kHz[:], frame_8_FIX[:], int32(frame_length_8kHz))
 	} else {
-		silk_float2short_array(frame_8_FIX[:], []float32(frame), int32(frame_length_8kHz))
+		silk_float2short_array(frame_8_FIX[:], frame, int32(frame_length_8kHz))
 	}
 	libc.MemSet(unsafe.Pointer(&filt_state[0]), 0, int(2*unsafe.Sizeof(int32(0))))
-	silk_resampler_down2(&filt_state[0], &frame_4_FIX[0], &frame_8_FIX[0], int32(frame_length_8kHz))
+	silk_resampler_down2(filt_state[:], frame_4_FIX[:], frame_8_FIX[:], int32(frame_length_8kHz))
 	silk_short2float_array(frame_4kHz[:], frame_4_FIX[:], int32(frame_length_4kHz))
 	for i = frame_length_4kHz - 1; i > 0; i-- {
 		if (float32(int32(frame_4kHz[i])) + (frame_4kHz[i-1])) > silk_int16_MAX {
@@ -110,7 +110,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 	target_ptr = &frame_4kHz[int32(int(uint32(int32(sf_length_4kHz)))<<2)]
 	for k = 0; k < nb_subfr>>1; k++ {
 		basis_ptr = (*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(min_lag_4kHz))))
-		celt_pitch_xcorr_c((*opus_val16)(unsafe.Pointer(target_ptr)), (*opus_val16)(unsafe.Pointer((*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(max_lag_4kHz)))))), &xcorr[0], sf_length_8kHz, max_lag_4kHz-min_lag_4kHz+1, arch)
+		celt_pitch_xcorr_c([]opus_val16(target_ptr), []opus_val16((*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(max_lag_4kHz))))), xcorr[:], sf_length_8kHz, max_lag_4kHz-min_lag_4kHz+1, arch)
 		cross_corr = float64(xcorr[max_lag_4kHz-min_lag_4kHz])
 		normalizer = silk_energy_FLP([]float32(target_ptr), sf_length_8kHz) + silk_energy_FLP([]float32(basis_ptr), sf_length_8kHz) + float64(sf_length_8kHz)*4000.0
 		C[0][min_lag_4kHz] += float32(cross_corr * 2 / normalizer)
@@ -126,10 +126,10 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 		C[0][i] -= C[0][i] * float32(i) / 4096.0
 	}
 	length_d_srch = complexity*2 + 4
-	silk_insertion_sort_decreasing_FLP(&C[0][min_lag_4kHz], &d_srch[0], max_lag_4kHz-min_lag_4kHz+1, length_d_srch)
+	silk_insertion_sort_decreasing_FLP([]float32(&C[0][min_lag_4kHz]), d_srch[:], max_lag_4kHz-min_lag_4kHz+1, length_d_srch)
 	Cmax = C[0][min_lag_4kHz]
 	if Cmax < 0.2 {
-		libc.MemSet(unsafe.Pointer(pitch_out), 0, nb_subfr*int(unsafe.Sizeof(int(0))))
+		libc.MemSet(unsafe.Pointer(&pitch_out[0]), 0, nb_subfr*int(unsafe.Sizeof(int(0))))
 		*LTPCorr = 0.0
 		*lagIndex = 0
 		*contourIndex = 0
@@ -172,7 +172,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 	}
 	libc.MemSet(unsafe.Pointer(&C[0][0]), 0, PE_MAX_NB_SUBFR*(((int(PE_MAX_LAG_MS*PE_MAX_FS_KHZ))>>1)+5)*int(unsafe.Sizeof(float32(0))))
 	if Fs_kHz == 8 {
-		target_ptr = (*float32)(unsafe.Add(unsafe.Pointer(frame), unsafe.Sizeof(float32(0))*uintptr((int(PE_SUBFR_LENGTH_MS*4))*8)))
+		target_ptr = &frame[(int(PE_SUBFR_LENGTH_MS*4))*8]
 	} else {
 		target_ptr = &frame_8kHz[(int(PE_SUBFR_LENGTH_MS*4))*8]
 	}
@@ -249,7 +249,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 		}
 	}
 	if lag == -1 {
-		libc.MemSet(unsafe.Pointer(pitch_out), 0, int(PE_MAX_NB_SUBFR*unsafe.Sizeof(int(0))))
+		libc.MemSet(unsafe.Pointer(&pitch_out[0]), 0, int(PE_MAX_NB_SUBFR*unsafe.Sizeof(int(0))))
 		*LTPCorr = 0.0
 		*lagIndex = 0
 		*contourIndex = 0
@@ -286,8 +286,8 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 		lag_new = lag
 		CBimax = 0
 		CCmax = -1000.0
-		silk_P_Ana_calc_corr_st3(cross_corr_st3, []float32(frame), start_lag, sf_length, nb_subfr, complexity, arch)
-		silk_P_Ana_calc_energy_st3(energies_st3, []float32(frame), start_lag, sf_length, nb_subfr, complexity)
+		silk_P_Ana_calc_corr_st3(cross_corr_st3, frame, start_lag, sf_length, nb_subfr, complexity, arch)
+		silk_P_Ana_calc_energy_st3(energies_st3, frame, start_lag, sf_length, nb_subfr, complexity)
 		lag_counter = 0
 		contour_bias = float32(PE_FLATCONTOUR_BIAS / float64(lag))
 		if nb_subfr == PE_MAX_NB_SUBFR {
@@ -299,7 +299,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 			cbk_size = PE_NB_CBKS_STAGE3_10MS
 			Lag_CB_ptr = &silk_CB_lags_stage3_10_ms[0][0]
 		}
-		target_ptr = (*float32)(unsafe.Add(unsafe.Pointer(frame), unsafe.Sizeof(float32(0))*uintptr((int(PE_SUBFR_LENGTH_MS*4))*Fs_kHz)))
+		target_ptr = &frame[(int(PE_SUBFR_LENGTH_MS*4))*Fs_kHz]
 		energy_tmp = silk_energy_FLP([]float32(target_ptr), nb_subfr*sf_length) + 1.0
 		for d = start_lag; d <= end_lag; d++ {
 			for j = 0; j < nb_cbk_search; j++ {
@@ -324,42 +324,42 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 			lag_counter++
 		}
 		for k = 0; k < nb_subfr; k++ {
-			*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = lag_new + int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_CB_ptr), k*cbk_size+CBimax))))
+			pitch_out[k] = lag_new + int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_CB_ptr), k*cbk_size+CBimax))))
 			if min_lag > (PE_MAX_LAG_MS * Fs_kHz) {
-				if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) > min_lag {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = min_lag
-				} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) < (PE_MAX_LAG_MS * Fs_kHz) {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = PE_MAX_LAG_MS * Fs_kHz
+				if (pitch_out[k]) > min_lag {
+					pitch_out[k] = min_lag
+				} else if (pitch_out[k]) < (PE_MAX_LAG_MS * Fs_kHz) {
+					pitch_out[k] = PE_MAX_LAG_MS * Fs_kHz
 				} else {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = *(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))
+					pitch_out[k] = pitch_out[k]
 				}
-			} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) > (PE_MAX_LAG_MS * Fs_kHz) {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = PE_MAX_LAG_MS * Fs_kHz
-			} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) < min_lag {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = min_lag
+			} else if (pitch_out[k]) > (PE_MAX_LAG_MS * Fs_kHz) {
+				pitch_out[k] = PE_MAX_LAG_MS * Fs_kHz
+			} else if (pitch_out[k]) < min_lag {
+				pitch_out[k] = min_lag
 			} else {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = *(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))
+				pitch_out[k] = pitch_out[k]
 			}
 		}
 		*lagIndex = int16(lag_new - min_lag)
 		*contourIndex = int8(CBimax)
 	} else {
 		for k = 0; k < nb_subfr; k++ {
-			*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = lag + int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_CB_ptr), k*cbk_size+CBimax))))
+			pitch_out[k] = lag + int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_CB_ptr), k*cbk_size+CBimax))))
 			if min_lag_8kHz > (int(PE_MAX_LAG_MS * 8)) {
-				if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) > min_lag_8kHz {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = min_lag_8kHz
-				} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) < (int(PE_MAX_LAG_MS * 8)) {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = int(PE_MAX_LAG_MS * 8)
+				if (pitch_out[k]) > min_lag_8kHz {
+					pitch_out[k] = min_lag_8kHz
+				} else if (pitch_out[k]) < (int(PE_MAX_LAG_MS * 8)) {
+					pitch_out[k] = int(PE_MAX_LAG_MS * 8)
 				} else {
-					*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = *(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))
+					pitch_out[k] = pitch_out[k]
 				}
-			} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) > (int(PE_MAX_LAG_MS * 8)) {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = int(PE_MAX_LAG_MS * 8)
-			} else if (*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))) < min_lag_8kHz {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = min_lag_8kHz
+			} else if (pitch_out[k]) > (int(PE_MAX_LAG_MS * 8)) {
+				pitch_out[k] = int(PE_MAX_LAG_MS * 8)
+			} else if (pitch_out[k]) < min_lag_8kHz {
+				pitch_out[k] = min_lag_8kHz
 			} else {
-				*(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k))) = *(*int)(unsafe.Add(unsafe.Pointer(pitch_out), unsafe.Sizeof(int(0))*uintptr(k)))
+				pitch_out[k] = pitch_out[k]
 			}
 		}
 		*lagIndex = int16(lag - min_lag_8kHz)
@@ -401,7 +401,7 @@ func silk_P_Ana_calc_corr_st3(cross_corr_st3 [4][34][5]float32, frame []float32,
 		lag_counter = 0
 		lag_low = int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_range_ptr), k*2+0))))
 		lag_high = int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_range_ptr), k*2+1))))
-		celt_pitch_xcorr_c((*opus_val16)(unsafe.Pointer(target_ptr)), (*opus_val16)(unsafe.Pointer((*float32)(unsafe.Add(unsafe.Pointer((*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(start_lag))))), -int(unsafe.Sizeof(float32(0))*uintptr(lag_high)))))), &xcorr[0], sf_length, lag_high-lag_low+1, arch)
+		celt_pitch_xcorr_c([]opus_val16(target_ptr), []opus_val16((*float32)(unsafe.Add(unsafe.Pointer((*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(start_lag))))), -int(unsafe.Sizeof(float32(0))*uintptr(lag_high))))), xcorr[:], sf_length, lag_high-lag_low+1, arch)
 		for j = lag_low; j <= lag_high; j++ {
 			scratch_mem[lag_counter] = float32(xcorr[lag_high-j])
 			lag_counter++

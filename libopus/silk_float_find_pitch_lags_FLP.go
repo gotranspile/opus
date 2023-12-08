@@ -38,8 +38,8 @@ func silk_find_pitch_lags_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *silk_enc
 		}
 		return 1.0
 	}())
-	silk_k2a_FLP(&A[0], &refl_coef[0], int32(psEnc.SCmn.PitchEstimationLPCOrder))
-	silk_bwexpander_FLP(&A[0], psEnc.SCmn.PitchEstimationLPCOrder, FIND_PITCH_BANDWIDTH_EXPANSION)
+	silk_k2a_FLP(A[:], refl_coef[:], int32(psEnc.SCmn.PitchEstimationLPCOrder))
+	silk_bwexpander_FLP(A[:], psEnc.SCmn.PitchEstimationLPCOrder, FIND_PITCH_BANDWIDTH_EXPANSION)
 	silk_LPC_analysis_filter_FLP(res, A[:], []float32(x_buf), buf_len, psEnc.SCmn.PitchEstimationLPCOrder)
 	if int(psEnc.SCmn.Indices.SignalType) != TYPE_NO_VOICE_ACTIVITY && psEnc.SCmn.First_frame_after_reset == 0 {
 		thrhld = 0.6
@@ -47,7 +47,7 @@ func silk_find_pitch_lags_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *silk_enc
 		thrhld -= float32(float64(psEnc.SCmn.Speech_activity_Q8) * 0.1 * (1.0 / 256.0))
 		thrhld -= float32(float64(int(psEnc.SCmn.PrevSignalType)>>1) * 0.15)
 		thrhld -= float32(float64(psEnc.SCmn.Input_tilt_Q15) * 0.1 * (1.0 / 32768.0))
-		if silk_pitch_analysis_core_FLP(&res[0], &psEncCtrl.PitchL[0], &psEnc.SCmn.Indices.LagIndex, &psEnc.SCmn.Indices.ContourIndex, &psEnc.LTPCorr, psEnc.SCmn.PrevLag, float32(float64(psEnc.SCmn.PitchEstimationThreshold_Q16)/65536.0), thrhld, psEnc.SCmn.Fs_kHz, psEnc.SCmn.PitchEstimationComplexity, psEnc.SCmn.Nb_subfr, arch) == 0 {
+		if silk_pitch_analysis_core_FLP(res, psEncCtrl.PitchL[:], &psEnc.SCmn.Indices.LagIndex, &psEnc.SCmn.Indices.ContourIndex, &psEnc.LTPCorr, psEnc.SCmn.PrevLag, float32(float64(psEnc.SCmn.PitchEstimationThreshold_Q16)/65536.0), thrhld, psEnc.SCmn.Fs_kHz, psEnc.SCmn.PitchEstimationComplexity, psEnc.SCmn.Nb_subfr, arch) == 0 {
 			psEnc.SCmn.Indices.SignalType = TYPE_VOICED
 		} else {
 			psEnc.SCmn.Indices.SignalType = TYPE_UNVOICED

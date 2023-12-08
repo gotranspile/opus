@@ -464,6 +464,82 @@ idents:
     fields:
       - name: frame
         type: slice
+  - name: silk_resampler_down2
+    fields:
+      - name: S
+        type: slice
+      - name: in
+        type: slice
+      - name: out
+        type: slice
+  - name: silk_resampler_down2_3
+    fields:
+      - name: S
+        type: slice
+      - name: in
+        type: slice
+      - name: out
+        type: slice
+  - name: celt_pitch_xcorr_c
+    fields:
+      - name: _x
+        type: slice
+      - name: _y
+        type: slice
+      - name: xcorr
+        type: slice
+  - name: celt_fir5
+    fields:
+      - name: x
+        type: slice
+      - name: num
+        type: slice
+  - name: pitch_downsample
+    fields:
+      - name: x_lp
+        type: slice
+  - name: find_best_pitch
+    fields:
+      - name: xcorr
+        type: slice
+      - name: y
+        type: slice
+      - name: best_pitch
+        type: slice
+  - name: pitch_search
+    fields:
+      - name: x_lp
+        type: slice
+      - name: y
+        type: slice
+      - name: pitch
+        type: slice
+  - name: remove_doubling
+    fields:
+      - name: x
+        type: slice
+  - name: silk_insertion_sort_decreasing_FLP
+    fields:
+      - name: a
+        type: slice
+      - name: idx
+        type: slice
+  - name: silk_pitch_analysis_core_FLP
+    fields:
+      - name: frame
+        type: slice
+      - name: pitch_out
+        type: slice
+  - name: silk_bwexpander_FLP
+    fields:
+      - name: ar
+        type: slice
+  - name: silk_k2a_FLP
+    fields:
+      - name: A
+        type: slice
+      - name: rc
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |

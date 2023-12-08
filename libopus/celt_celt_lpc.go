@@ -150,7 +150,7 @@ func _celt_autocorr(x *opus_val16, ac *opus_val32, window *opus_val16, overlap i
 		xptr = xx
 	}
 	shift = 0
-	celt_pitch_xcorr_c(xptr, xptr, ac, fastN, lag+1, arch)
+	celt_pitch_xcorr_c([]opus_val16(xptr), []opus_val16(xptr), []opus_val32(ac), fastN, lag+1, arch)
 	for k = 0; k <= lag; k++ {
 		for func() opus_val32 {
 			i = k + fastN

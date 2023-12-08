@@ -55,7 +55,7 @@ func warped_true2monic_coefs(coefs *float32, lambda float32, limit float32, orde
 			*(*float32)(unsafe.Add(unsafe.Pointer(coefs), unsafe.Sizeof(float32(0))*uintptr(i))) *= gain
 		}
 		chirp = float32(0.99 - (float64(iter)*0.1+0.8)*float64(maxabs-limit)/float64(maxabs*float32(ind+1)))
-		silk_bwexpander_FLP(coefs, order, chirp)
+		silk_bwexpander_FLP([]float32(coefs), order, chirp)
 		for i = order - 1; i > 0; i-- {
 			*(*float32)(unsafe.Add(unsafe.Pointer(coefs), unsafe.Sizeof(float32(0))*uintptr(i-1))) -= lambda * *(*float32)(unsafe.Add(unsafe.Pointer(coefs), unsafe.Sizeof(float32(0))*uintptr(i)))
 		}
@@ -87,7 +87,7 @@ func limit_coefs(coefs *float32, limit float32, order int) {
 			return
 		}
 		chirp = float32(0.99 - (float64(iter)*0.1+0.8)*float64(maxabs-limit)/float64(maxabs*float32(ind+1)))
-		silk_bwexpander_FLP(coefs, order, chirp)
+		silk_bwexpander_FLP([]float32(coefs), order, chirp)
 	}
 }
 func silk_noise_shape_analysis_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *silk_encoder_control_FLP, pitch_res *float32, x *float32) {
@@ -175,12 +175,12 @@ func silk_noise_shape_analysis_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *sil
 		}
 		auto_corr[0] += auto_corr[0]*SHAPE_WHITE_NOISE_FRACTION + 1.0
 		nrg = silk_schur_FLP(rc[:], auto_corr[:], psEnc.SCmn.ShapingLPCOrder)
-		silk_k2a_FLP(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER], &rc[0], int32(psEnc.SCmn.ShapingLPCOrder))
+		silk_k2a_FLP([]float32(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER]), rc[:], int32(psEnc.SCmn.ShapingLPCOrder))
 		psEncCtrl.Gains[k] = float32(math.Sqrt(float64(nrg)))
 		if psEnc.SCmn.Warping_Q16 > 0 {
 			psEncCtrl.Gains[k] *= warped_gain(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER], warping, psEnc.SCmn.ShapingLPCOrder)
 		}
-		silk_bwexpander_FLP(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER], psEnc.SCmn.ShapingLPCOrder, BWExp)
+		silk_bwexpander_FLP([]float32(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER]), psEnc.SCmn.ShapingLPCOrder, BWExp)
 		if psEnc.SCmn.Warping_Q16 > 0 {
 			warped_true2monic_coefs(&psEncCtrl.AR[k*MAX_SHAPE_LPC_ORDER], warping, 3.999, psEnc.SCmn.ShapingLPCOrder)
 		} else {

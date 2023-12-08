@@ -296,8 +296,8 @@ func celt_plc_pitch_search(decode_mem [2]*celt_sig, C int, arch int) int {
 		lp_pitch_buf *opus_val16
 	)
 	lp_pitch_buf = (*opus_val16)(libc.Malloc((int(DECODE_BUFFER_SIZE >> 1)) * int(unsafe.Sizeof(opus_val16(0)))))
-	pitch_downsample(decode_mem[:], lp_pitch_buf, DECODE_BUFFER_SIZE, C, arch)
-	pitch_search((*opus_val16)(unsafe.Add(unsafe.Pointer(lp_pitch_buf), unsafe.Sizeof(opus_val16(0))*(720>>1))), lp_pitch_buf, int(DECODE_BUFFER_SIZE-720), 720-100, &pitch_index, arch)
+	pitch_downsample(decode_mem[:], []opus_val16(lp_pitch_buf), DECODE_BUFFER_SIZE, C, arch)
+	pitch_search([]opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(lp_pitch_buf), unsafe.Sizeof(opus_val16(0))*(720>>1)))), []opus_val16(lp_pitch_buf), int(DECODE_BUFFER_SIZE-720), 720-100, []int(&pitch_index), arch)
 	pitch_index = 720 - pitch_index
 	return pitch_index
 }
