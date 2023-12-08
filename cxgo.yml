@@ -622,6 +622,8 @@ files:
     disabled: true # DONE
   - name: silk/float/LTP_scale_ctrl_FLP.c
     disabled: true # DONE
+  - name: silk/float/process_gains_FLP.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
