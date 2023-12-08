@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_energy_FLP(data []float32, dataSize int) float64 {
 	var (

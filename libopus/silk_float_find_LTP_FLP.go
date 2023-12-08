@@ -17,7 +17,7 @@ func silk_find_LTP_FLP(XX [100]float32, xX [20]float32, r_ptr []float32, lag [4]
 		lag_ptr = (*float32)(unsafe.Add(unsafe.Pointer(&r_ptr[0]), -int(unsafe.Sizeof(float32(0))*uintptr(lag[k]+int(LTP_ORDER/2)))))
 		silk_corrMatrix_FLP(lag_ptr, subfr_length, LTP_ORDER, XX_ptr)
 		silk_corrVector_FLP(lag_ptr, &r_ptr[0], subfr_length, LTP_ORDER, xX_ptr)
-		xx = float32(silk_energy_FLP(&r_ptr[0], subfr_length+LTP_ORDER))
+		xx = float32(silk_energy_FLP(r_ptr, subfr_length+LTP_ORDER))
 		temp = 1.0 / (func() float32 {
 			if xx > (LTP_CORR_INV_MAX*0.5*(*(*float32)(unsafe.Add(unsafe.Pointer(XX_ptr), unsafe.Sizeof(float32(0))*0))+*(*float32)(unsafe.Add(unsafe.Pointer(XX_ptr), unsafe.Sizeof(float32(0))*24))) + 1.0) {
 				return xx

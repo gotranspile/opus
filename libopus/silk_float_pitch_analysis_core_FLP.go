@@ -112,7 +112,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 		basis_ptr = (*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(min_lag_4kHz))))
 		celt_pitch_xcorr_c((*opus_val16)(unsafe.Pointer(target_ptr)), (*opus_val16)(unsafe.Pointer((*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(max_lag_4kHz)))))), &xcorr[0], sf_length_8kHz, max_lag_4kHz-min_lag_4kHz+1, arch)
 		cross_corr = float64(xcorr[max_lag_4kHz-min_lag_4kHz])
-		normalizer = silk_energy_FLP(target_ptr, sf_length_8kHz) + silk_energy_FLP(basis_ptr, sf_length_8kHz) + float64(sf_length_8kHz)*4000.0
+		normalizer = silk_energy_FLP([]float32(target_ptr), sf_length_8kHz) + silk_energy_FLP([]float32(basis_ptr), sf_length_8kHz) + float64(sf_length_8kHz)*4000.0
 		C[0][min_lag_4kHz] += float32(cross_corr * 2 / normalizer)
 		for d = min_lag_4kHz + 1; d <= max_lag_4kHz; d++ {
 			basis_ptr = (*float32)(unsafe.Add(unsafe.Pointer(basis_ptr), -int(unsafe.Sizeof(float32(0))*1)))
@@ -177,13 +177,13 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 		target_ptr = &frame_8kHz[(int(PE_SUBFR_LENGTH_MS*4))*8]
 	}
 	for k = 0; k < nb_subfr; k++ {
-		energy_tmp = silk_energy_FLP(target_ptr, sf_length_8kHz) + 1.0
+		energy_tmp = silk_energy_FLP([]float32(target_ptr), sf_length_8kHz) + 1.0
 		for j = 0; j < length_d_comp; j++ {
 			d = int(d_comp[j])
 			basis_ptr = (*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(d))))
-			cross_corr = silk_inner_product_FLP(basis_ptr, target_ptr, sf_length_8kHz)
+			cross_corr = silk_inner_product_FLP([]float32(basis_ptr), []float32(target_ptr), sf_length_8kHz)
 			if cross_corr > 0.0 {
-				energy = silk_energy_FLP(basis_ptr, sf_length_8kHz)
+				energy = silk_energy_FLP([]float32(basis_ptr), sf_length_8kHz)
 				C[k][d] = float32(cross_corr * 2 / (energy + energy_tmp))
 			} else {
 				C[k][d] = 0.0
@@ -300,7 +300,7 @@ func silk_pitch_analysis_core_FLP(frame *float32, pitch_out *int, lagIndex *int1
 			Lag_CB_ptr = &silk_CB_lags_stage3_10_ms[0][0]
 		}
 		target_ptr = (*float32)(unsafe.Add(unsafe.Pointer(frame), unsafe.Sizeof(float32(0))*uintptr((int(PE_SUBFR_LENGTH_MS*4))*Fs_kHz)))
-		energy_tmp = silk_energy_FLP(target_ptr, nb_subfr*sf_length) + 1.0
+		energy_tmp = silk_energy_FLP([]float32(target_ptr), nb_subfr*sf_length) + 1.0
 		for d = start_lag; d <= end_lag; d++ {
 			for j = 0; j < nb_cbk_search; j++ {
 				cross_corr = 0.0
@@ -449,7 +449,7 @@ func silk_P_Ana_calc_energy_st3(energies_st3 [4][34][5]float32, frame []float32,
 	for k = 0; k < nb_subfr; k++ {
 		lag_counter = 0
 		basis_ptr = (*float32)(unsafe.Add(unsafe.Pointer(target_ptr), -int(unsafe.Sizeof(float32(0))*uintptr(start_lag+int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_range_ptr), k*2+0))))))))
-		energy = silk_energy_FLP(basis_ptr, sf_length) + 0.001
+		energy = silk_energy_FLP([]float32(basis_ptr), sf_length) + 0.001
 		scratch_mem[lag_counter] = float32(energy)
 		lag_counter++
 		lag_diff = int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_range_ptr), k*2+1)))) - int(*((*int8)(unsafe.Add(unsafe.Pointer(Lag_range_ptr), k*2+0)))) + 1

@@ -137,7 +137,7 @@ func silk_noise_shape_analysis_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *sil
 		pitch_res_ptr = pitch_res
 		nSegs = (SUB_FRAME_LENGTH_MS * int(int32(int16(psEnc.SCmn.Nb_subfr)))) / 2
 		for k = 0; k < nSegs; k++ {
-			nrg = float32(nSamples) + float32(silk_energy_FLP(pitch_res_ptr, nSamples))
+			nrg = float32(nSamples) + float32(silk_energy_FLP([]float32(pitch_res_ptr), nSamples))
 			log_energy = silk_log2(float64(nrg))
 			if k > 0 {
 				energy_variation += float32(math.Abs(float64(log_energy - log_energy_prev)))

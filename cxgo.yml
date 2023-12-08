@@ -388,6 +388,16 @@ idents:
         type: slice
       - name: cl_Q5
         type: slice
+  - name: silk_energy_FLP
+    fields:
+      - name: data
+        type: slice
+  - name: silk_inner_product_FLP
+    fields:
+      - name: data1
+        type: slice
+      - name: data2
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -551,6 +561,12 @@ files:
   - name: silk/VQ_WMat_EC.c
     disabled: true # DONE
   - name: silk/float/wrappers_FLP.c
+    disabled: true # DONE
+  - name: silk/float/burg_modified_FLP.c
+    disabled: true # DONE
+  - name: silk/float/LPC_analysis_filter_FLP.c
+    disabled: true # DONE
+  - name: silk/float/find_LPC_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c

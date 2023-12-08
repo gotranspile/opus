@@ -1,9 +1,10 @@
-package libopus
+package silk
 
 import (
-	"github.com/gotranspile/cxgo/runtime/libc"
 	"math"
 	"unsafe"
+
+	"github.com/gotranspile/cxgo/runtime/libc"
 )
 
 const MAX_FRAME_SIZE = 384
@@ -23,19 +24,18 @@ func silk_burg_modified_FLP(A []float32, x []float32, minInvGain float32, subfr_
 		Atmp             float64
 		tmp1             float64
 		tmp2             float64
-		x_ptr            *float32
 		C_first_row      [24]float64
 		C_last_row       [24]float64
 		CAf              [25]float64
 		CAb              [25]float64
 		Af               [24]float64
 	)
-	C0 = silk_energy_FLP(&x[0], nb_subfr*subfr_length)
+	C0 = silk_energy_FLP(x, nb_subfr*subfr_length)
 	libc.MemSet(unsafe.Pointer(&C_first_row[0]), 0, int(SILK_MAX_ORDER_LPC*unsafe.Sizeof(float64(0))))
 	for s = 0; s < nb_subfr; s++ {
-		x_ptr = &x[s*subfr_length]
+		x_ptr := x[s*subfr_length:]
 		for n = 1; n < D+1; n++ {
-			C_first_row[n-1] += silk_inner_product_FLP(x_ptr, (*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n))), subfr_length-n)
+			C_first_row[n-1] += silk_inner_product_FLP(x_ptr, x_ptr[n:], subfr_length-n)
 		}
 	}
 	libc.MemCpy(unsafe.Pointer(&C_last_row[0]), unsafe.Pointer(&C_first_row[0]), int(SILK_MAX_ORDER_LPC*unsafe.Sizeof(float64(0))))
@@ -48,19 +48,19 @@ func silk_burg_modified_FLP(A []float32, x []float32, minInvGain float32, subfr_
 	reached_max_gain = 0
 	for n = 0; n < D; n++ {
 		for s = 0; s < nb_subfr; s++ {
-			x_ptr = &x[s*subfr_length]
-			tmp1 = float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n))))
-			tmp2 = float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(subfr_length-n-1))))
+			x_ptr := x[s*subfr_length:]
+			tmp1 = float64(x_ptr[n])
+			tmp2 = float64(x_ptr[subfr_length-n-1])
 			for k = 0; k < n; k++ {
-				C_first_row[k] -= float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n))) * *(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n-k-1))))
-				C_last_row[k] -= float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(subfr_length-n-1))) * *(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(subfr_length-n+k))))
+				C_first_row[k] -= float64(x_ptr[n] * x_ptr[n-k-1])
+				C_last_row[k] -= float64(x_ptr[subfr_length-n-1] * x_ptr[subfr_length-n+k])
 				Atmp = Af[k]
-				tmp1 += float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n-k-1)))) * Atmp
-				tmp2 += float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(subfr_length-n+k)))) * Atmp
+				tmp1 += float64(x_ptr[n-k-1]) * Atmp
+				tmp2 += float64(x_ptr[subfr_length-n+k]) * Atmp
 			}
 			for k = 0; k <= n; k++ {
-				CAf[k] -= tmp1 * float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(n-k))))
-				CAb[k] -= tmp2 * float64(*(*float32)(unsafe.Add(unsafe.Pointer(x_ptr), unsafe.Sizeof(float32(0))*uintptr(subfr_length-n+k-1))))
+				CAf[k] -= tmp1 * float64(x_ptr[n-k])
+				CAb[k] -= tmp2 * float64(x_ptr[subfr_length-n+k-1])
 			}
 		}
 		tmp1 = C_first_row[n]
@@ -117,7 +117,7 @@ func silk_burg_modified_FLP(A []float32, x []float32, minInvGain float32, subfr_
 			A[k] = float32(-Af[k])
 		}
 		for s = 0; s < nb_subfr; s++ {
-			C0 -= silk_energy_FLP(&x[s*subfr_length], D)
+			C0 -= silk_energy_FLP(x[s*subfr_length:], D)
 		}
 		nrg_f = C0 * invGain
 	} else {

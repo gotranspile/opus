@@ -52,11 +52,11 @@ func silk_residual_energy_FLP(nrgs [4]float32, x []float32, a [2][16]float32, ga
 	LPC_res_ptr = &LPC_res[LPC_order]
 	shift = LPC_order + subfr_length
 	silk_LPC_analysis_filter_FLP(LPC_res[:], a[0][:], []float32(&x[shift*0]), shift*2, LPC_order)
-	nrgs[0] = float32(float64(gains[0]*gains[0]) * silk_energy_FLP((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*0))), subfr_length))
-	nrgs[1] = float32(float64(gains[1]*gains[1]) * silk_energy_FLP((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*1))), subfr_length))
+	nrgs[0] = float32(float64(gains[0]*gains[0]) * silk_energy_FLP([]float32((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*0)))), subfr_length))
+	nrgs[1] = float32(float64(gains[1]*gains[1]) * silk_energy_FLP([]float32((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*1)))), subfr_length))
 	if nb_subfr == MAX_NB_SUBFR {
 		silk_LPC_analysis_filter_FLP(LPC_res[:], a[1][:], []float32(&x[shift*2]), shift*2, LPC_order)
-		nrgs[2] = float32(float64(gains[2]*gains[2]) * silk_energy_FLP((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*0))), subfr_length))
-		nrgs[3] = float32(float64(gains[3]*gains[3]) * silk_energy_FLP((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*1))), subfr_length))
+		nrgs[2] = float32(float64(gains[2]*gains[2]) * silk_energy_FLP([]float32((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*0)))), subfr_length))
+		nrgs[3] = float32(float64(gains[3]*gains[3]) * silk_energy_FLP([]float32((*float32)(unsafe.Add(unsafe.Pointer(LPC_res_ptr), unsafe.Sizeof(float32(0))*uintptr(shift*1)))), subfr_length))
 	}
 }

@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_inner_product_FLP(data1 []float32, data2 []float32, dataSize int) float64 {
 	var (
