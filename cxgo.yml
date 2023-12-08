@@ -406,6 +406,24 @@ idents:
         type: slice
       - name: wXx
         type: slice
+  - name: silk_corrVector_FLP
+    fields:
+      - name: x
+        type: slice
+      - name: t
+        type: slice
+      - name: Xt
+        type: slice
+  - name: silk_corrMatrix_FLP
+    fields:
+      - name: x
+        type: slice
+      - name: XX
+        type: slice
+  - name: silk_scale_vector_FLP
+    fields:
+      - name: data1
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -577,6 +595,12 @@ files:
   - name: silk/float/find_LPC_FLP.c
     disabled: true # DONE
   - name: silk/float/residual_energy_FLP.c
+    disabled: true # DONE
+  - name: silk/float/find_LTP_FLP.c
+    disabled: true # DONE
+  - name: silk/float/scale_vector_FLP.c
+    disabled: true # DONE
+  - name: silk/float/corrMatrix_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c
