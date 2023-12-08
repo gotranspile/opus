@@ -436,6 +436,34 @@ idents:
         type: slice
       - name: LTP_res
         type: slice
+  - name: silk_biquad_alt_stride1
+    fields:
+      - name: in
+        type: slice
+      - name: B_Q28
+        type: slice
+      - name: A_Q28
+        type: slice
+      - name: S
+        type: slice
+      - name: out
+        type: slice
+  - name: silk_biquad_alt_stride2_c
+    fields:
+      - name: in
+        type: slice
+      - name: B_Q28
+        type: slice
+      - name: A_Q28
+        type: slice
+      - name: S
+        type: slice
+      - name: out
+        type: slice
+  - name: silk_LP_variable_cutoff
+    fields:
+      - name: frame
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -623,6 +651,10 @@ files:
   - name: silk/float/LTP_scale_ctrl_FLP.c
     disabled: true # DONE
   - name: silk/float/process_gains_FLP.c
+    disabled: true # DONE
+  - name: silk/LP_variable_cutoff.c
+    disabled: true # DONE
+  - name: silk/biquad_alt.c
     disabled: true # DONE
 
   - name: silk/*.c

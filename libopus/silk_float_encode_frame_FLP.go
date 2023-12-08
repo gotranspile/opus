@@ -87,7 +87,7 @@ func silk_encode_frame_FLP(psEnc *silk_encoder_state_FLP, pnBytesOut *int32, psR
 	}()) & 3)
 	x_frame = &psEnc.X_buf[psEnc.SCmn.Ltp_mem_length]
 	res_pitch_frame = &res_pitch[psEnc.SCmn.Ltp_mem_length]
-	silk_LP_variable_cutoff(&psEnc.SCmn.SLP, &psEnc.SCmn.InputBuf[1], psEnc.SCmn.Frame_length)
+	silk_LP_variable_cutoff(&psEnc.SCmn.SLP, []int16(&psEnc.SCmn.InputBuf[1]), psEnc.SCmn.Frame_length)
 	silk_short2float_array([]float32((*float32)(unsafe.Add(unsafe.Pointer(x_frame), unsafe.Sizeof(float32(0))*uintptr(LA_SHAPE_MS*psEnc.SCmn.Fs_kHz)))), []int16(&psEnc.SCmn.InputBuf[1]), int32(psEnc.SCmn.Frame_length))
 	for i = 0; i < 8; i++ {
 		*(*float32)(unsafe.Add(unsafe.Pointer(x_frame), unsafe.Sizeof(float32(0))*uintptr(LA_SHAPE_MS*psEnc.SCmn.Fs_kHz+i*(psEnc.SCmn.Frame_length>>3)))) += float32(float64(1-(i&2)) * 1e-06)
