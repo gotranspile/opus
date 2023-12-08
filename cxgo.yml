@@ -398,6 +398,14 @@ idents:
         type: slice
       - name: data2
         type: slice
+  - name: silk_residual_energy_covar_FLP
+    fields:
+      - name: c
+        type: slice
+      - name: wXX
+        type: slice
+      - name: wXx
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -567,6 +575,8 @@ files:
   - name: silk/float/LPC_analysis_filter_FLP.c
     disabled: true # DONE
   - name: silk/float/find_LPC_FLP.c
+    disabled: true # DONE
+  - name: silk/float/residual_energy_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c
