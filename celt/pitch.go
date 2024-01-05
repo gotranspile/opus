@@ -239,7 +239,7 @@ func pitch_downsample(x [][]celt_sig, x_lp []opus_val16, len_ int, C int, arch i
 	lpc2[4] = c1 * (lpc[3])
 	celt_fir5(x_lp, lpc2[:], len_>>1)
 }
-func celt_pitch_xcorr_c(_x []opus_val16, _y []opus_val16, xcorr []opus_val32, len_ int, max_pitch int, arch int) {
+func PitchXcorrC(_x []opus_val16, _y []opus_val16, xcorr []opus_val32, len_ int, max_pitch int, arch int) {
 	var i int
 	for i = 0; i < max_pitch-3; i += 4 {
 		var sum [4]opus_val32
@@ -272,7 +272,7 @@ func pitch_search(x_lp []opus_val16, y []opus_val16, len_ int, max_pitch int, pi
 	for j := 0; j < lag>>2; j++ {
 		y_lp4[j] = y[j*2]
 	}
-	celt_pitch_xcorr_c(x_lp4, y_lp4, xcorr, len_>>2, max_pitch>>2, arch)
+	PitchXcorrC(x_lp4, y_lp4, xcorr, len_>>2, max_pitch>>2, arch)
 	find_best_pitch(xcorr, y_lp4, len_>>2, max_pitch>>2, best_pitch[:])
 	for i := 0; i < max_pitch>>1; i++ {
 		var sum opus_val32

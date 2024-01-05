@@ -770,6 +770,8 @@ files:
     disabled: true # DONE
   - name: silk/resampler_private_AR2.c
     disabled: true # DONE
+  - name: silk/float/pitch_analysis_core_FLP.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
