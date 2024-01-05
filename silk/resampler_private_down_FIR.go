@@ -166,7 +166,7 @@ func ResamplerPrivateDownFIR(S *ResamplerState, out []int16, in []int16, inLen i
 		} else {
 			nSamplesIn = int32(S.BatchSize)
 		}
-		silk_resampler_private_AR2(S.SIIR[:], buf[S.FIR_Order:], in, S.Coefs, nSamplesIn)
+		resampler_private_AR2(S.SIIR[:], buf[S.FIR_Order:], in, S.Coefs, nSamplesIn)
 		max_index_Q16 = int32(int(uint32(nSamplesIn)) << 16)
 		out = resamplerPrivateDownFIR_INTERPOL(out, []int32(buf), []int16(FIR_Coefs), S.FIR_Order, S.FIR_Fracs, max_index_Q16, index_increment_Q16)
 		in = in[nSamplesIn:]

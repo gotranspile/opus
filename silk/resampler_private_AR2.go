@@ -1,6 +1,6 @@
 package silk
 
-func silk_resampler_private_AR2(S []int32, out_Q8 []int32, in []int16, A_Q14 []int16, len_ int32) {
+func resampler_private_AR2(S []int32, out_Q8 []int32, in []int16, A_Q14 []int16, len_ int32) {
 	var (
 		k     int32
 		out32 int32
