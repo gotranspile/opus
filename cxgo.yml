@@ -572,6 +572,12 @@ idents:
         type: slice
       - name: window
         type: slice
+  - name: silk_autocorrelation_FLP
+    fields:
+      - name: results
+        type: slice
+      - name: inputData
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -771,6 +777,8 @@ files:
   - name: silk/resampler_private_AR2.c
     disabled: true # DONE
   - name: silk/float/pitch_analysis_core_FLP.c
+    disabled: true # DONE
+  - name: silk/float/find_pitch_lags_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c

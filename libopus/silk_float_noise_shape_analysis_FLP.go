@@ -171,7 +171,7 @@ func silk_noise_shape_analysis_FLP(psEnc *silk_encoder_state_FLP, psEncCtrl *sil
 		if psEnc.SCmn.Warping_Q16 > 0 {
 			silk_warped_autocorrelation_FLP(&auto_corr[0], &x_windowed[0], warping, psEnc.SCmn.ShapeWinLength, psEnc.SCmn.ShapingLPCOrder)
 		} else {
-			silk_autocorrelation_FLP(&auto_corr[0], &x_windowed[0], psEnc.SCmn.ShapeWinLength, psEnc.SCmn.ShapingLPCOrder+1)
+			silk_autocorrelation_FLP(auto_corr[:], x_windowed[:], psEnc.SCmn.ShapeWinLength, psEnc.SCmn.ShapingLPCOrder+1)
 		}
 		auto_corr[0] += auto_corr[0]*SHAPE_WHITE_NOISE_FRACTION + 1.0
 		nrg = silk_schur_FLP(rc[:], auto_corr[:], psEnc.SCmn.ShapingLPCOrder)
