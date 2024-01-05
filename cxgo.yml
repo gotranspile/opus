@@ -806,6 +806,8 @@ files:
     disabled: true # DONE
   - name: silk/float/noise_shape_analysis_FLP.c
     disabled: true # DONE
+  - name: silk/encode_indices.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
