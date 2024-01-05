@@ -540,6 +540,38 @@ idents:
         type: slice
       - name: rc
         type: slice
+  - name: _celt_lpc
+    fields:
+      - name: _lpc
+        type: slice
+      - name: ac
+        type: slice
+  - name: celt_fir_c
+    fields:
+      - name: x
+        type: slice
+      - name: num
+        type: slice
+      - name: y
+        type: slice
+  - name: celt_iir
+    fields:
+      - name: _x
+        type: slice
+      - name: den
+        type: slice
+      - name: _y
+        type: slice
+      - name: mem
+        type: slice
+  - name: _celt_autocorr
+    fields:
+      - name: x
+        type: slice
+      - name: ac
+        type: slice
+      - name: window
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |

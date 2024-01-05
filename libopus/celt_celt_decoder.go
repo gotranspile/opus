@@ -467,15 +467,15 @@ func celt_decode_lost(st *OpusCustomDecoder, N int, LM int) {
 				}
 				if loss_duration == 0 {
 					var ac [25]opus_val32
-					_celt_autocorr(exc, &ac[0], window, overlap, LPC_ORDER, MAX_PERIOD, st.Arch)
+					_celt_autocorr([]opus_val16(exc), ac[:], []opus_val16(window), overlap, LPC_ORDER, MAX_PERIOD, st.Arch)
 					ac[0] *= opus_val32(1.0001)
 					for i = 1; i <= LPC_ORDER; i++ {
 						ac[i] -= opus_val32(float32(ac[i]*(0.008*0.008)) * float32(i) * float32(i))
 					}
-					_celt_lpc((*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER))), &ac[0], LPC_ORDER)
+					_celt_lpc([]opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER)))), ac[:], LPC_ORDER)
 				}
 				{
-					celt_fir_c((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length)))), (*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER))), fir_tmp, exc_length, LPC_ORDER, st.Arch)
+					celt_fir_c([]opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))), []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER)))), []opus_val16(fir_tmp), exc_length, LPC_ORDER, st.Arch)
 					libc.MemCpy(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))), unsafe.Pointer(fir_tmp), exc_length*int(unsafe.Sizeof(opus_val16(0)))+int((int64(uintptr(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer((*opus_val16)(unsafe.Add(unsafe.Pointer(exc), unsafe.Sizeof(opus_val16(0))*uintptr(MAX_PERIOD)))), -int(unsafe.Sizeof(opus_val16(0))*uintptr(exc_length))))))-uintptr(unsafe.Pointer(fir_tmp))))*0))
 				}
 				{
@@ -529,7 +529,7 @@ func celt_decode_lost(st *OpusCustomDecoder, N int, LM int) {
 					for i = 0; i < LPC_ORDER; i++ {
 						lpc_mem[i] = opus_val16(*(*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE-N-1-i))))
 					}
-					celt_iir((*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N)))))), (*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER))), (*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N)))))), extrapolation_len, LPC_ORDER, &lpc_mem[0], st.Arch)
+					celt_iir((*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N)))))), []opus_val16((*opus_val16)(unsafe.Add(unsafe.Pointer(lpc), unsafe.Sizeof(opus_val16(0))*uintptr(c*LPC_ORDER)))), (*opus_val32)(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer((*celt_sig)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(celt_sig(0))*uintptr(DECODE_BUFFER_SIZE)))), -int(unsafe.Sizeof(celt_sig(0))*uintptr(N)))))), extrapolation_len, LPC_ORDER, lpc_mem[:], st.Arch)
 				}
 				{
 					var S2 opus_val32 = 0
