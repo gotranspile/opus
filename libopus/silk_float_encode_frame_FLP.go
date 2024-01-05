@@ -94,7 +94,7 @@ func silk_encode_frame_FLP(psEnc *silk_encoder_state_FLP, pnBytesOut *int32, psR
 	}
 	if psEnc.SCmn.PrefillFlag == 0 {
 		silk_find_pitch_lags_FLP(psEnc, &sEncCtrl, res_pitch[:], []float32(x_frame), psEnc.SCmn.Arch)
-		silk_noise_shape_analysis_FLP(psEnc, &sEncCtrl, res_pitch_frame, x_frame)
+		silk_noise_shape_analysis_FLP(psEnc, &sEncCtrl, []float32(res_pitch_frame), []float32(x_frame))
 		silk_find_pred_coefs_FLP(psEnc, &sEncCtrl, []float32(res_pitch_frame), []float32(x_frame), condCoding)
 		silk_process_gains_FLP(psEnc, &sEncCtrl, condCoding)
 		silk_LBRR_encode_FLP(psEnc, &sEncCtrl, []float32(x_frame), condCoding)

@@ -578,6 +578,30 @@ idents:
         type: slice
       - name: inputData
         type: slice
+  - name: warped_gain
+    fields:
+      - name: coefs
+        type: slice
+  - name: warped_true2monic_coefs
+    fields:
+      - name: coefs
+        type: slice
+  - name: limit_coefs
+    fields:
+      - name: coefs
+        type: slice
+  - name: silk_noise_shape_analysis_FLP
+    fields:
+      - name: pitch_res
+        type: slice
+      - name: x
+        type: slice
+  - name: silk_warped_autocorrelation_FLP
+    fields:
+      - name: corr
+        type: slice
+      - name: input
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -779,6 +803,8 @@ files:
   - name: silk/float/pitch_analysis_core_FLP.c
     disabled: true # DONE
   - name: silk/float/find_pitch_lags_FLP.c
+    disabled: true # DONE
+  - name: silk/float/noise_shape_analysis_FLP.c
     disabled: true # DONE
 
   - name: silk/*.c

@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_warped_autocorrelation_FLP(corr []float32, input []float32, warping float32, length int, order int) {
 	var (
