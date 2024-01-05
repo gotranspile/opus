@@ -732,6 +732,8 @@ files:
     disabled: true # DONE
   - name: silk/biquad_alt.c
     disabled: true # DONE
+  - name: silk/resampler_down2.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
