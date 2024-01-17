@@ -1,27 +1,28 @@
-package libopus
+package silk
 
 import (
-	"github.com/gotranspile/cxgo/runtime/libc"
 	"math"
 	"unsafe"
+
+	"github.com/gotranspile/cxgo/runtime/libc"
+
+	"github.com/gotranspile/opus/celt"
 )
 
-func silk_Get_Encoder_Size(encSizeBytes *int) int {
+func GetEncoderSize(encSizeBytes *int) int {
 	var ret int = SILK_NO_ERROR
-	*encSizeBytes = int(unsafe.Sizeof(silk_encoder{}))
+	*encSizeBytes = int(unsafe.Sizeof(Encoder{}))
 	return ret
 }
-func silk_InitEncoder(encState unsafe.Pointer, arch int, encStatus *silk_EncControlStruct) int {
+func (psEnc *Encoder) Init(arch int, encStatus *EncControlStruct) int {
 	var (
-		psEnc *silk_encoder
-		n     int
-		ret   int = SILK_NO_ERROR
+		n   int
+		ret int = SILK_NO_ERROR
 	)
-	psEnc = (*silk_encoder)(encState)
-	*psEnc = silk_encoder{}
+	*psEnc = Encoder{}
 	for n = 0; n < ENCODER_NUM_CHANNELS; n++ {
 		if func() int {
-			ret += silk_init_encoder(&psEnc.State_Fxx[n], arch)
+			ret += psEnc.State_Fxx[n].Init(arch)
 			return ret
 		}() != 0 {
 		}
@@ -29,38 +30,33 @@ func silk_InitEncoder(encState unsafe.Pointer, arch int, encStatus *silk_EncCont
 	psEnc.NChannelsAPI = 1
 	psEnc.NChannelsInternal = 1
 	if func() int {
-		ret += silk_QueryEncoder(encState, encStatus)
+		ret += psEnc.Query(encStatus)
 		return ret
 	}() != 0 {
 	}
 	return ret
 }
-func silk_QueryEncoder(encState unsafe.Pointer, encStatus *silk_EncControlStruct) int {
-	var (
-		ret       int = SILK_NO_ERROR
-		state_Fxx *silk_encoder_state_FLP
-		psEnc     *silk_encoder = (*silk_encoder)(encState)
-	)
-	state_Fxx = &psEnc.State_Fxx[0]
+func (psEnc *Encoder) Query(encStatus *EncControlStruct) int {
+	state_Fxx := &psEnc.State_Fxx[0]
 	encStatus.NChannelsAPI = int32(psEnc.NChannelsAPI)
 	encStatus.NChannelsInternal = int32(psEnc.NChannelsInternal)
-	encStatus.API_sampleRate = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.API_fs_Hz
-	encStatus.MaxInternalSampleRate = int32((*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.MaxInternal_fs_Hz)
-	encStatus.MinInternalSampleRate = int32((*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.MinInternal_fs_Hz)
-	encStatus.DesiredInternalSampleRate = int32((*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.DesiredInternal_fs_Hz)
-	encStatus.PayloadSize_ms = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.PacketSize_ms
-	encStatus.BitRate = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.TargetRate_bps
-	encStatus.PacketLossPercentage = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.PacketLoss_perc
-	encStatus.Complexity = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.Complexity
-	encStatus.UseInBandFEC = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.UseInBandFEC
-	encStatus.UseDTX = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.UseDTX
-	encStatus.UseCBR = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.UseCBR
-	encStatus.InternalSampleRate = int32(int(int32(int16((*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.Fs_kHz))) * 1000)
-	encStatus.AllowBandwidthSwitch = (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.Allow_bandwidth_switch
-	encStatus.InWBmodeWithoutVariableLP = int(libc.BoolToInt((*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.Fs_kHz == 16 && (*(*silk_encoder_state_FLP)(unsafe.Add(unsafe.Pointer(state_Fxx), unsafe.Sizeof(silk_encoder_state_FLP{})*0))).SCmn.SLP.Mode == 0))
-	return ret
+	encStatus.API_sampleRate = state_Fxx.SCmn.API_fs_Hz
+	encStatus.MaxInternalSampleRate = int32(state_Fxx.SCmn.MaxInternal_fs_Hz)
+	encStatus.MinInternalSampleRate = int32(state_Fxx.SCmn.MinInternal_fs_Hz)
+	encStatus.DesiredInternalSampleRate = int32(state_Fxx.SCmn.DesiredInternal_fs_Hz)
+	encStatus.PayloadSize_ms = state_Fxx.SCmn.PacketSize_ms
+	encStatus.BitRate = state_Fxx.SCmn.TargetRate_bps
+	encStatus.PacketLossPercentage = state_Fxx.SCmn.PacketLoss_perc
+	encStatus.Complexity = state_Fxx.SCmn.Complexity
+	encStatus.UseInBandFEC = state_Fxx.SCmn.UseInBandFEC
+	encStatus.UseDTX = state_Fxx.SCmn.UseDTX
+	encStatus.UseCBR = state_Fxx.SCmn.UseCBR
+	encStatus.InternalSampleRate = int32(int(int32(int16(state_Fxx.SCmn.Fs_kHz))) * 1000)
+	encStatus.AllowBandwidthSwitch = state_Fxx.SCmn.Allow_bandwidth_switch
+	encStatus.InWBmodeWithoutVariableLP = int(libc.BoolToInt(state_Fxx.SCmn.Fs_kHz == 16 && state_Fxx.SCmn.SLP.Mode == 0))
+	return SILK_NO_ERROR
 }
-func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, samplesIn []int16, nSamplesIn int, psRangeEnc *ec_enc, nBytesOut *int32, prefillFlag int, activity int) int {
+func (psEnc *Encoder) Encode(encControl *EncControlStruct, samplesIn []int16, nSamplesIn int, psRangeEnc *celt.ECEnc, nBytesOut *int32, prefillFlag int, activity int) int {
 	var (
 		n                            int
 		i                            int
@@ -80,8 +76,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 		channelRate_bps              int32
 		LBRR_symbol                  int32
 		sum                          int32
-		psEnc                        *silk_encoder = (*silk_encoder)(encState)
-		buf                          *int16
+		buf                          []int16
 		transition                   int
 		curr_block                   int
 		tot_blocks                   int
@@ -96,14 +91,14 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 		return *p
 	}()
 	if (func() int {
-		ret = check_control_input(encControl)
+		ret = CheckControlInput(encControl)
 		return ret
 	}()) != 0 {
 		return ret
 	}
 	encControl.SwitchReady = 0
 	if int(encControl.NChannelsInternal) > psEnc.NChannelsInternal {
-		ret += silk_init_encoder(&psEnc.State_Fxx[1], psEnc.State_Fxx[0].SCmn.Arch)
+		ret += psEnc.State_Fxx[1].Init(psEnc.State_Fxx[0].SCmn.Arch)
 		*(*[2]int16)(unsafe.Pointer(&psEnc.SStereo.Pred_prev_Q13[0])) = [2]int16{}
 		*(*[2]int16)(unsafe.Pointer(&psEnc.SStereo.SSide[0])) = [2]int16{}
 		psEnc.SStereo.Mid_side_amp_Q0[0] = 0
@@ -113,8 +108,8 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 		psEnc.SStereo.Width_prev_Q14 = 0
 		psEnc.SStereo.Smth_width_Q14 = int16(int32(math.Floor(1*(1<<14) + 0.5)))
 		if psEnc.NChannelsAPI == 2 {
-			libc.MemCpy(unsafe.Pointer(&psEnc.State_Fxx[1].SCmn.Resampler_state), unsafe.Pointer(&psEnc.State_Fxx[0].SCmn.Resampler_state), int(unsafe.Sizeof(silk_resampler_state_struct{})))
-			libc.MemCpy(unsafe.Pointer(&psEnc.State_Fxx[1].SCmn.In_HP_State[0]), unsafe.Pointer(&psEnc.State_Fxx[0].SCmn.In_HP_State[0]), int(unsafe.Sizeof([2]int32{})))
+			psEnc.State_Fxx[1].SCmn.Resampler_state = psEnc.State_Fxx[0].SCmn.Resampler_state
+			psEnc.State_Fxx[1].SCmn.In_HP_State = psEnc.State_Fxx[0].SCmn.In_HP_State
 		}
 	}
 	transition = int(libc.BoolToInt(encControl.PayloadSize_ms != psEnc.State_Fxx[0].SCmn.PacketSize_ms || psEnc.NChannelsInternal != int(encControl.NChannelsInternal)))
@@ -128,7 +123,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 	}
 	curr_block = 0
 	if prefillFlag != 0 {
-		var save_LP silk_LP_state
+		var save_LP LPState
 		if nBlocksOf10ms != 1 {
 			return -101
 		}
@@ -137,7 +132,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 			save_LP.Saved_fs_kHz = int32(psEnc.State_Fxx[0].SCmn.Fs_kHz)
 		}
 		for n = 0; n < int(encControl.NChannelsInternal); n++ {
-			ret = silk_init_encoder(&psEnc.State_Fxx[n], psEnc.State_Fxx[n].SCmn.Arch)
+			ret = psEnc.State_Fxx[n].Init(psEnc.State_Fxx[n].SCmn.Arch)
 			if prefillFlag == 2 {
 				psEnc.State_Fxx[n].SCmn.SLP = save_LP
 			}
@@ -166,7 +161,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 			force_fs_kHz = 0
 		}
 		if (func() int {
-			ret = silk_control_encoder(&psEnc.State_Fxx[n], encControl, psEnc.AllowBandwidthSwitch, n, force_fs_kHz)
+			ret = ControlEncoder(&psEnc.State_Fxx[n], encControl, psEnc.AllowBandwidthSwitch, n, force_fs_kHz)
 			return ret
 		}()) != 0 {
 			return ret
@@ -180,7 +175,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 	}
 	nSamplesToBufferMax = nBlocksOf10ms * 10 * psEnc.State_Fxx[0].SCmn.Fs_kHz
 	nSamplesFromInputMax = int(int32((nSamplesToBufferMax * int(psEnc.State_Fxx[0].SCmn.API_fs_Hz)) / (psEnc.State_Fxx[0].SCmn.Fs_kHz * 1000)))
-	buf = (*int16)(libc.Malloc(nSamplesFromInputMax * int(unsafe.Sizeof(int16(0)))))
+	buf = make([]int16, nSamplesFromInputMax)
 	for {
 		var curr_nBitsUsedLBRR int = 0
 		nSamplesToBuffer = psEnc.State_Fxx[0].SCmn.Frame_length - psEnc.State_Fxx[0].SCmn.InputBufIx
@@ -193,12 +188,12 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 		if int(encControl.NChannelsAPI) == 2 && int(encControl.NChannelsInternal) == 2 {
 			var id int = psEnc.State_Fxx[0].SCmn.NFramesEncoded
 			for n = 0; n < nSamplesFromInput; n++ {
-				*(*int16)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int16(0))*uintptr(n))) = samplesIn[n*2]
+				buf[n] = samplesIn[n*2]
 			}
 			if psEnc.NPrevChannelsInternal == 1 && id == 0 {
-				libc.MemCpy(unsafe.Pointer(&psEnc.State_Fxx[1].SCmn.Resampler_state), unsafe.Pointer(&psEnc.State_Fxx[0].SCmn.Resampler_state), int(unsafe.Sizeof(silk_resampler_state_struct{})))
+				psEnc.State_Fxx[1].SCmn.Resampler_state = psEnc.State_Fxx[0].SCmn.Resampler_state
 			}
-			ret += silk_resampler(&psEnc.State_Fxx[0].SCmn.Resampler_state, []int16(&psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2]), []int16(buf), int32(nSamplesFromInput))
+			ret += psEnc.State_Fxx[0].SCmn.Resampler_state.Resample(psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2:], []int16(buf), int32(nSamplesFromInput))
 			psEnc.State_Fxx[0].SCmn.InputBufIx += nSamplesToBuffer
 			nSamplesToBuffer = psEnc.State_Fxx[1].SCmn.Frame_length - psEnc.State_Fxx[1].SCmn.InputBufIx
 			if nSamplesToBuffer < (nBlocksOf10ms * 10 * psEnc.State_Fxx[1].SCmn.Fs_kHz) {
@@ -207,41 +202,41 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 				nSamplesToBuffer = nBlocksOf10ms * 10 * psEnc.State_Fxx[1].SCmn.Fs_kHz
 			}
 			for n = 0; n < nSamplesFromInput; n++ {
-				*(*int16)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int16(0))*uintptr(n))) = samplesIn[n*2+1]
+				buf[n] = samplesIn[n*2+1]
 			}
-			ret += silk_resampler(&psEnc.State_Fxx[1].SCmn.Resampler_state, []int16(&psEnc.State_Fxx[1].SCmn.InputBuf[psEnc.State_Fxx[1].SCmn.InputBufIx+2]), []int16(buf), int32(nSamplesFromInput))
+			ret += psEnc.State_Fxx[1].SCmn.Resampler_state.Resample(psEnc.State_Fxx[1].SCmn.InputBuf[psEnc.State_Fxx[1].SCmn.InputBufIx+2:], []int16(buf), int32(nSamplesFromInput))
 			psEnc.State_Fxx[1].SCmn.InputBufIx += nSamplesToBuffer
 		} else if int(encControl.NChannelsAPI) == 2 && int(encControl.NChannelsInternal) == 1 {
 			for n = 0; n < nSamplesFromInput; n++ {
 				sum = int32(int(samplesIn[n*2]) + int(samplesIn[n*2+1]))
 				if 1 == 1 {
-					*(*int16)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int16(0))*uintptr(n))) = int16((int(sum) >> 1) + (int(sum) & 1))
+					buf[n] = int16((int(sum) >> 1) + (int(sum) & 1))
 				} else {
-					*(*int16)(unsafe.Add(unsafe.Pointer(buf), unsafe.Sizeof(int16(0))*uintptr(n))) = int16(((int(sum) >> (1 - 1)) + 1) >> 1)
+					buf[n] = int16(((int(sum) >> (1 - 1)) + 1) >> 1)
 				}
 			}
-			ret += silk_resampler(&psEnc.State_Fxx[0].SCmn.Resampler_state, []int16(&psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2]), []int16(buf), int32(nSamplesFromInput))
+			ret += psEnc.State_Fxx[0].SCmn.Resampler_state.Resample(psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2:], []int16(buf), int32(nSamplesFromInput))
 			if psEnc.NPrevChannelsInternal == 2 && psEnc.State_Fxx[0].SCmn.NFramesEncoded == 0 {
-				ret += silk_resampler(&psEnc.State_Fxx[1].SCmn.Resampler_state, []int16(&psEnc.State_Fxx[1].SCmn.InputBuf[psEnc.State_Fxx[1].SCmn.InputBufIx+2]), []int16(buf), int32(nSamplesFromInput))
+				ret += psEnc.State_Fxx[1].SCmn.Resampler_state.Resample(psEnc.State_Fxx[1].SCmn.InputBuf[psEnc.State_Fxx[1].SCmn.InputBufIx+2:], []int16(buf), int32(nSamplesFromInput))
 				for n = 0; n < psEnc.State_Fxx[0].SCmn.Frame_length; n++ {
 					psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+n+2] = int16((int(psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+n+2]) + int(psEnc.State_Fxx[1].SCmn.InputBuf[psEnc.State_Fxx[1].SCmn.InputBufIx+n+2])) >> 1)
 				}
 			}
 			psEnc.State_Fxx[0].SCmn.InputBufIx += nSamplesToBuffer
 		} else {
-			libc.MemCpy(unsafe.Pointer(buf), unsafe.Pointer(&samplesIn[0]), nSamplesFromInput*int(unsafe.Sizeof(int16(0))))
-			ret += silk_resampler(&psEnc.State_Fxx[0].SCmn.Resampler_state, []int16(&psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2]), []int16(buf), int32(nSamplesFromInput))
+			copy(buf[:nSamplesFromInput], samplesIn[:nSamplesFromInput])
+			ret += psEnc.State_Fxx[0].SCmn.Resampler_state.Resample(psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.InputBufIx+2:], []int16(buf), int32(nSamplesFromInput))
 			psEnc.State_Fxx[0].SCmn.InputBufIx += nSamplesToBuffer
 		}
-		samplesIn += []int16(nSamplesFromInput * int(encControl.NChannelsAPI))
+		samplesIn = samplesIn[nSamplesFromInput*int(encControl.NChannelsAPI):]
 		nSamplesIn -= nSamplesFromInput
 		psEnc.AllowBandwidthSwitch = 0
 		if psEnc.State_Fxx[0].SCmn.InputBufIx >= psEnc.State_Fxx[0].SCmn.Frame_length {
 			if psEnc.State_Fxx[0].SCmn.NFramesEncoded == 0 && prefillFlag == 0 {
 				var iCDF [2]uint8 = [2]uint8{}
-				iCDF[0] = uint8(int8(256 - (256 >> ((psEnc.State_Fxx[0].SCmn.NFramesPerPacket + 1) * int(encControl.NChannelsInternal)))))
-				ec_enc_icdf(psRangeEnc, 0, iCDF[:], 8)
-				curr_nBitsUsedLBRR = ec_tell((*ec_ctx)(unsafe.Pointer(psRangeEnc)))
+				iCDF[0] = uint8(int8(int(256) - (256 >> ((psEnc.State_Fxx[0].SCmn.NFramesPerPacket + 1) * int(encControl.NChannelsInternal)))))
+				psRangeEnc.EncIcdf(0, iCDF[:], 8)
+				curr_nBitsUsedLBRR = psRangeEnc.Tell()
 				for n = 0; n < int(encControl.NChannelsInternal); n++ {
 					LBRR_symbol = 0
 					for i = 0; i < psEnc.State_Fxx[n].SCmn.NFramesPerPacket; i++ {
@@ -253,7 +248,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 						psEnc.State_Fxx[n].SCmn.LBRR_flag = 0
 					}
 					if int(LBRR_symbol) != 0 && psEnc.State_Fxx[n].SCmn.NFramesPerPacket > 1 {
-						ec_enc_icdf(psRangeEnc, int(LBRR_symbol)-1, []byte(silk_LBRR_flags_iCDF_ptr[psEnc.State_Fxx[n].SCmn.NFramesPerPacket-2]), 8)
+						psRangeEnc.EncIcdf(int(LBRR_symbol)-1, []byte(silk_LBRR_flags_iCDF_ptr[psEnc.State_Fxx[n].SCmn.NFramesPerPacket-2]), 8)
 					}
 				}
 				for i = 0; i < psEnc.State_Fxx[0].SCmn.NFramesPerPacket; i++ {
@@ -261,9 +256,9 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 						if psEnc.State_Fxx[n].SCmn.LBRR_flags[i] != 0 {
 							var condCoding int
 							if int(encControl.NChannelsInternal) == 2 && n == 0 {
-								silk_stereo_encode_pred(psRangeEnc, psEnc.SStereo.PredIx[i])
+								StereoEncodePred(psRangeEnc, psEnc.SStereo.PredIx[i])
 								if psEnc.State_Fxx[1].SCmn.LBRR_flags[i] == 0 {
-									silk_stereo_encode_mid_only(psRangeEnc, psEnc.SStereo.Mid_only_flags[i])
+									StereoEncodeMidOnly(psRangeEnc, psEnc.SStereo.Mid_only_flags[i])
 								}
 							}
 							if i > 0 && psEnc.State_Fxx[n].SCmn.LBRR_flags[i-1] != 0 {
@@ -271,17 +266,17 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 							} else {
 								condCoding = CODE_INDEPENDENTLY
 							}
-							silk_encode_indices(&psEnc.State_Fxx[n].SCmn, psRangeEnc, i, 1, condCoding)
-							silk_encode_pulses(psRangeEnc, int(psEnc.State_Fxx[n].SCmn.Indices_LBRR[i].SignalType), int(psEnc.State_Fxx[n].SCmn.Indices_LBRR[i].QuantOffsetType), psEnc.State_Fxx[n].SCmn.Pulses_LBRR[i][:], psEnc.State_Fxx[n].SCmn.Frame_length)
+							EncodeIndices(&psEnc.State_Fxx[n].SCmn, psRangeEnc, i, 1, condCoding)
+							EncodePulses(psRangeEnc, int(psEnc.State_Fxx[n].SCmn.Indices_LBRR[i].SignalType), int(psEnc.State_Fxx[n].SCmn.Indices_LBRR[i].QuantOffsetType), psEnc.State_Fxx[n].SCmn.Pulses_LBRR[i][:], psEnc.State_Fxx[n].SCmn.Frame_length)
 						}
 					}
 				}
 				for n = 0; n < int(encControl.NChannelsInternal); n++ {
 					*(*[3]int)(unsafe.Pointer(&psEnc.State_Fxx[n].SCmn.LBRR_flags[0])) = [3]int{}
 				}
-				curr_nBitsUsedLBRR = ec_tell((*ec_ctx)(unsafe.Pointer(psRangeEnc))) - curr_nBitsUsedLBRR
+				curr_nBitsUsedLBRR = psRangeEnc.Tell() - curr_nBitsUsedLBRR
 			}
-			silk_HP_variable_cutoff(psEnc.State_Fxx[:])
+			HP_variable_cutoff(psEnc.State_Fxx[:])
 			nBits = int(int32((int(encControl.BitRate) * encControl.PayloadSize_ms) / 1000))
 			if prefillFlag == 0 {
 				if curr_nBitsUsedLBRR < 10 {
@@ -301,7 +296,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 			}
 			TargetRate_bps -= int32((int(psEnc.NBitsExceeded) * 1000) / BITRESERVOIR_DECAY_TIME_MS)
 			if prefillFlag == 0 && psEnc.State_Fxx[0].SCmn.NFramesEncoded > 0 {
-				var bitsBalance int32 = int32(ec_tell((*ec_ctx)(unsafe.Pointer(psRangeEnc))) - int(psEnc.NBitsUsedLBRR) - nBits*psEnc.State_Fxx[0].SCmn.NFramesEncoded)
+				var bitsBalance int32 = int32(psRangeEnc.Tell() - int(psEnc.NBitsUsedLBRR) - nBits*psEnc.State_Fxx[0].SCmn.NFramesEncoded)
 				TargetRate_bps -= int32((int(bitsBalance) * 1000) / BITRESERVOIR_DECAY_TIME_MS)
 			}
 			if int(encControl.BitRate) > 5000 {
@@ -320,13 +315,13 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 				TargetRate_bps = TargetRate_bps
 			}
 			if int(encControl.NChannelsInternal) == 2 {
-				silk_stereo_LR_to_MS(&psEnc.SStereo, []int16(&psEnc.State_Fxx[0].SCmn.InputBuf[2]), []int16(&psEnc.State_Fxx[1].SCmn.InputBuf[2]), psEnc.SStereo.PredIx[psEnc.State_Fxx[0].SCmn.NFramesEncoded], &psEnc.SStereo.Mid_only_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded], MStargetRates_bps[:], TargetRate_bps, psEnc.State_Fxx[0].SCmn.Speech_activity_Q8, encControl.ToMono, psEnc.State_Fxx[0].SCmn.Fs_kHz, psEnc.State_Fxx[0].SCmn.Frame_length)
+				StereoLRtoMS(&psEnc.SStereo, psEnc.State_Fxx[0].SCmn.InputBuf[2:], psEnc.State_Fxx[1].SCmn.InputBuf[2:], psEnc.SStereo.PredIx[psEnc.State_Fxx[0].SCmn.NFramesEncoded], &psEnc.SStereo.Mid_only_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded], MStargetRates_bps[:], TargetRate_bps, psEnc.State_Fxx[0].SCmn.Speech_activity_Q8, encControl.ToMono, psEnc.State_Fxx[0].SCmn.Fs_kHz, psEnc.State_Fxx[0].SCmn.Frame_length)
 				if int(psEnc.SStereo.Mid_only_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded]) == 0 {
 					if psEnc.Prev_decode_only_middle == 1 {
-						psEnc.State_Fxx[1].SShape = silk_shape_state_FLP{}
-						psEnc.State_Fxx[1].SCmn.SNSQ = silk_nsq_state{}
-						*(*[16]int16)(unsafe.Pointer(&psEnc.State_Fxx[1].SCmn.Prev_NLSFq_Q15[0])) = [16]int16{}
-						*(*[2]int32)(unsafe.Pointer(&psEnc.State_Fxx[1].SCmn.SLP.In_LP_State[0])) = [2]int32{}
+						psEnc.State_Fxx[1].SShape = ShapeStateFLP{}
+						psEnc.State_Fxx[1].SCmn.SNSQ = NSQState{}
+						psEnc.State_Fxx[1].SCmn.Prev_NLSFq_Q15 = [16]int16{}
+						psEnc.State_Fxx[1].SCmn.SLP.In_LP_State = [2]int32{}
 						psEnc.State_Fxx[1].SCmn.PrevLag = 100
 						psEnc.State_Fxx[1].SCmn.SNSQ.LagPrev = 100
 						psEnc.State_Fxx[1].SShape.LastGainIndex = 10
@@ -334,21 +329,21 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 						psEnc.State_Fxx[1].SCmn.SNSQ.Prev_gain_Q16 = 65536
 						psEnc.State_Fxx[1].SCmn.First_frame_after_reset = 1
 					}
-					silk_encode_do_VAD_FLP(&psEnc.State_Fxx[1], activity)
+					EncodeDoVAD_FLP(&psEnc.State_Fxx[1], activity)
 				} else {
 					psEnc.State_Fxx[1].SCmn.VAD_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded] = 0
 				}
 				if prefillFlag == 0 {
-					silk_stereo_encode_pred(psRangeEnc, psEnc.SStereo.PredIx[psEnc.State_Fxx[0].SCmn.NFramesEncoded])
+					StereoEncodePred(psRangeEnc, psEnc.SStereo.PredIx[psEnc.State_Fxx[0].SCmn.NFramesEncoded])
 					if int(psEnc.State_Fxx[1].SCmn.VAD_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded]) == 0 {
-						silk_stereo_encode_mid_only(psRangeEnc, psEnc.SStereo.Mid_only_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded])
+						StereoEncodeMidOnly(psRangeEnc, psEnc.SStereo.Mid_only_flags[psEnc.State_Fxx[0].SCmn.NFramesEncoded])
 					}
 				}
 			} else {
 				libc.MemCpy(unsafe.Pointer(&psEnc.State_Fxx[0].SCmn.InputBuf[0]), unsafe.Pointer(&psEnc.SStereo.SMid[0]), int(2*unsafe.Sizeof(int16(0))))
 				libc.MemCpy(unsafe.Pointer(&psEnc.SStereo.SMid[0]), unsafe.Pointer(&psEnc.State_Fxx[0].SCmn.InputBuf[psEnc.State_Fxx[0].SCmn.Frame_length]), int(2*unsafe.Sizeof(int16(0))))
 			}
-			silk_encode_do_VAD_FLP(&psEnc.State_Fxx[0], activity)
+			EncodeDoVAD_FLP(&psEnc.State_Fxx[0], activity)
 			for n = 0; n < int(encControl.NChannelsInternal); n++ {
 				var (
 					maxBits int
@@ -385,7 +380,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 						condCoding = CODE_CONDITIONALLY
 					}
 					if (func() int {
-						ret = silk_encode_frame_FLP(&psEnc.State_Fxx[n], nBytesOut, psRangeEnc, condCoding, maxBits, useCBR)
+						ret = EncodeFrame_FLP(&psEnc.State_Fxx[n], nBytesOut, psRangeEnc, condCoding, maxBits, useCBR)
 						return ret
 					}()) != 0 {
 					}
@@ -406,7 +401,7 @@ func silk_Encode(encState unsafe.Pointer, encControl *silk_EncControlStruct, sam
 					flags |= int(psEnc.State_Fxx[n].SCmn.LBRR_flag)
 				}
 				if prefillFlag == 0 {
-					ec_enc_patch_initial_bits(psRangeEnc, uint(flags), uint((psEnc.State_Fxx[0].SCmn.NFramesPerPacket+1)*int(encControl.NChannelsInternal)))
+					psRangeEnc.EncPatchInitialBits(uint(flags), uint((psEnc.State_Fxx[0].SCmn.NFramesPerPacket+1)*int(encControl.NChannelsInternal)))
 				}
 				if psEnc.State_Fxx[0].SCmn.InDTX != 0 && (int(encControl.NChannelsInternal) == 1 || psEnc.State_Fxx[1].SCmn.InDTX != 0) {
 					*nBytesOut = 0

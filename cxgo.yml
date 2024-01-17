@@ -608,6 +608,10 @@ idents:
         type: slice
       - name: inVec2
         type: slice
+  - name: silk_Encode
+    fields:
+      - name: samplesIn
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -816,7 +820,9 @@ files:
     disabled: true # DONE
   - name: silk/float/encode_frame_FLP.c
     disabled: true # DONE
-  - name: silk/float/stereo_LR_to_MS.c
+  - name: silk/stereo_LR_to_MS.c
+    disabled: true # DONE
+  - name: silk/enc_API.c
     disabled: true # DONE
 
   - name: silk/*.c

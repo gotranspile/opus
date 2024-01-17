@@ -1517,13 +1517,13 @@ func opus_encode_native(st *OpusEncoder, pcm []opus_val16, frame_size int, data 
 			for i = 0; i < st.Encoder_buffer*st.Channels; i++ {
 				*(*int16)(unsafe.Add(unsafe.Pointer(pcm_silk), unsafe.Sizeof(int16(0))*uintptr(i))) = FLOAT2INT16(float32(st.Delay_buffer[i]))
 			}
-			silk_Encode(silk_enc, &st.Silk_mode, pcm_silk, st.Encoder_buffer, nil, &zero, prefill, activity)
+			silk_Encode(silk_enc, &st.Silk_mode, []int16(pcm_silk), st.Encoder_buffer, nil, &zero, prefill, activity)
 			st.Silk_mode.OpusCanSwitch = 0
 		}
 		for i = 0; i < frame_size*st.Channels; i++ {
 			*(*int16)(unsafe.Add(unsafe.Pointer(pcm_silk), unsafe.Sizeof(int16(0))*uintptr(i))) = FLOAT2INT16(float32(*(*opus_val16)(unsafe.Add(unsafe.Pointer(pcm_buf), unsafe.Sizeof(opus_val16(0))*uintptr(total_buffer*st.Channels+i)))))
 		}
-		ret = silk_Encode(silk_enc, &st.Silk_mode, pcm_silk, frame_size, &enc, &nBytes, 0, activity)
+		ret = silk_Encode(silk_enc, &st.Silk_mode, []int16(pcm_silk), frame_size, &enc, &nBytes, 0, activity)
 		if ret != 0 {
 			return -3
 		}

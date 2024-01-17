@@ -1,6 +1,6 @@
 package silk
 
-func InitEncoder(psEnc *EncoderStateFLP, arch int) int {
+func (psEnc *EncoderStateFLP) Init(arch int) int {
 	var ret int = 0
 	*psEnc = EncoderStateFLP{}
 	psEnc.SCmn.Arch = arch
