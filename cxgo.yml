@@ -808,6 +808,8 @@ files:
     disabled: true # DONE
   - name: silk/encode_indices.c
     disabled: true # DONE
+  - name: silk/float/encode_frame_FLP.c
+    disabled: true # DONE
 
   - name: silk/*.c
   - name: silk/float/*.c
