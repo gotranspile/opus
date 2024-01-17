@@ -1,8 +1,10 @@
 package silk
 
-import "github.com/gotranspile/opus/celt"
+import (
+	"github.com/gotranspile/opus/entcode"
+)
 
-func EncodeIndices(psEncC *EncoderState, psRangeEnc *celt.ECEnc, FrameIndex int, encode_LBRR int, condCoding int) {
+func EncodeIndices(psEncC *EncoderState, psRangeEnc *entcode.Encoder, FrameIndex int, encode_LBRR int, condCoding int) {
 	var (
 		i                        int
 		k                        int

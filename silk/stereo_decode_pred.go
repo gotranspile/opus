@@ -3,10 +3,10 @@ package silk
 import (
 	"math"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-func StereoDecodePred(psRangeDec *celt.ECDec, pred_Q13 []int32) {
+func StereoDecodePred(psRangeDec *entcode.Decoder, pred_Q13 []int32) {
 	var ix [2][3]int
 	n := psRangeDec.DecIcdf(silk_stereo_pred_joint_iCDF[:], 8)
 	ix[0][2] = int(int32(n / 5))
@@ -23,6 +23,6 @@ func StereoDecodePred(psRangeDec *celt.ECDec, pred_Q13 []int32) {
 	}
 	pred_Q13[0] -= pred_Q13[1]
 }
-func StereoDecodeMidOnly(psRangeDec *celt.ECDec) int {
+func StereoDecodeMidOnly(psRangeDec *entcode.Decoder) int {
 	return psRangeDec.DecIcdf(silk_stereo_only_code_mid_iCDF[:], 8)
 }

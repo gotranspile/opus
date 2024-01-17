@@ -6,7 +6,7 @@ import (
 
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
 func GetEncoderSize(encSizeBytes *int) int {
@@ -56,7 +56,7 @@ func (psEnc *Encoder) Query(encStatus *EncControlStruct) int {
 	encStatus.InWBmodeWithoutVariableLP = int(libc.BoolToInt(state_Fxx.SCmn.Fs_kHz == 16 && state_Fxx.SCmn.SLP.Mode == 0))
 	return SILK_NO_ERROR
 }
-func (psEnc *Encoder) Encode(encControl *EncControlStruct, samplesIn []int16, nSamplesIn int, psRangeEnc *celt.ECEnc, nBytesOut *int32, prefillFlag int, activity int) int {
+func (psEnc *Encoder) Encode(encControl *EncControlStruct, samplesIn []int16, nSamplesIn int, psRangeEnc *entcode.Encoder, nBytesOut *int32, prefillFlag int, activity int) int {
 	var (
 		n                            int
 		i                            int

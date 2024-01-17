@@ -5,10 +5,10 @@ import (
 
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-func DecodeFrame(psDec *DecoderState, psRangeDec *celt.ECDec, pOut []int16, pN *int32, lostFlag int, condCoding int, arch int) int {
+func DecodeFrame(psDec *DecoderState, psRangeDec *entcode.Decoder, pOut []int16, pN *int32, lostFlag int, condCoding int, arch int) int {
 	L := psDec.Frame_length
 	psDecCtrl := new(DecoderControl)
 	psDecCtrl.LTP_scale_Q14 = 0

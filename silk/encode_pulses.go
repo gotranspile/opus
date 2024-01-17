@@ -6,7 +6,7 @@ import (
 
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
 func combineAndCheck(pulses_comb []int, pulses_in []int, max_pulses int, len_ int) int {
@@ -20,7 +20,7 @@ func combineAndCheck(pulses_comb []int, pulses_in []int, max_pulses int, len_ in
 	return 0
 }
 
-func EncodePulses(psRangeEnc *celt.ECEnc, signalType int, quantOffsetType int, pulses []int8, frame_length int) {
+func EncodePulses(psRangeEnc *entcode.Encoder, signalType int, quantOffsetType int, pulses []int8, frame_length int) {
 	var (
 		RateLevelIndex int = 0
 		pulses_comb    [8]int

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
 type Decoder struct {
@@ -27,7 +27,7 @@ func (dec *Decoder) Init() int {
 	dec.Prev_decode_only_middle = 0
 	return SILK_NO_ERROR
 }
-func (dec *Decoder) Decode(decControl *DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *celt.ECDec, samplesOut []int16, nSamplesOut *int32, arch int) int {
+func (dec *Decoder) Decode(decControl *DecControlStruct, lostFlag int, newPacketFlag int, psRangeDec *entcode.Decoder, samplesOut []int16, nSamplesOut *int32, arch int) int {
 	var (
 		i                  int
 		n                  int

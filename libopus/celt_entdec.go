@@ -3,10 +3,10 @@ package libopus
 import (
 	"unsafe"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-type ec_dec = celt.ECDec
+type ec_dec = entcode.Decoder
 
 func ec_dec_init(_this *ec_dec, _buf *uint8, _storage uint32) {
 	_this.Init(unsafe.Slice(_buf, _storage))

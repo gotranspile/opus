@@ -1,13 +1,13 @@
 package libopus
 
 import (
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-const EC_UINT_BITS = celt.EC_UINT_BITS
-const BITRES = celt.BITRES
+const EC_UINT_BITS = entcode.EC_UINT_BITS
+const BITRES = entcode.BITRES
 
-type ec_ctx = celt.ECCtx
+type ec_ctx = entcode.Context
 
 func celt_udiv(n uint32, d uint32) uint32 {
 	return n / d
@@ -16,7 +16,7 @@ func celt_sudiv(n int32, d int32) int32 {
 	return n / d
 }
 func ec_ilog(v uint32) int {
-	return celt.EC_ilog(v)
+	return entcode.EC_ilog(v)
 }
 func ec_range_bytes(ec *ec_ctx) uint32 {
 	return ec.RangeBytes()

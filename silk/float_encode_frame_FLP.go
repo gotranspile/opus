@@ -6,7 +6,7 @@ import (
 	"github.com/gotranspile/cxgo/runtime/cmath"
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
 func EncodeDoVAD_FLP(psEnc *EncoderStateFLP, activity int) {
@@ -33,7 +33,7 @@ func EncodeDoVAD_FLP(psEnc *EncoderStateFLP, activity int) {
 		psEnc.SCmn.VAD_flags[psEnc.SCmn.NFramesEncoded] = 1
 	}
 }
-func EncodeFrame_FLP(psEnc *EncoderStateFLP, pnBytesOut *int32, psRangeEnc *celt.ECEnc, condCoding int, maxBits int, useCBR int) int {
+func EncodeFrame_FLP(psEnc *EncoderStateFLP, pnBytesOut *int32, psRangeEnc *entcode.Encoder, condCoding int, maxBits int, useCBR int) int {
 	var (
 		sEncCtrl               EncoderControlFLP
 		i                      int
@@ -45,8 +45,8 @@ func EncodeFrame_FLP(psEnc *EncoderStateFLP, pnBytesOut *int32, psRangeEnc *celt
 		x_frame                []float32
 		res_pitch_frame        []float32
 		res_pitch              [672]float32
-		sRangeEnc_copy         celt.ECEnc
-		sRangeEnc_copy2        celt.ECEnc
+		sRangeEnc_copy         entcode.Encoder
+		sRangeEnc_copy2        entcode.Encoder
 		sNSQ_copy              NSQState
 		sNSQ_copy2             NSQState
 		seed_copy              int32

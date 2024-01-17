@@ -1,8 +1,10 @@
 package silk
 
-import "github.com/gotranspile/opus/celt"
+import (
+	"github.com/gotranspile/opus/entcode"
+)
 
-func DecodeIndices(d *DecoderState, psRangeDec *celt.ECDec, FrameIndex int, decode_LBRR bool, condCoding int) {
+func DecodeIndices(d *DecoderState, psRangeDec *entcode.Decoder, FrameIndex int, decode_LBRR bool, condCoding int) {
 	var (
 		Ix      int
 		ec_ix   [16]int16

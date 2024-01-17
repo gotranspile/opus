@@ -5,10 +5,10 @@ import (
 
 	"github.com/gotranspile/cxgo/runtime/libc"
 
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-func DecodePulses(psRangeDec *celt.ECDec, pulses []int16, signalType int, quantOffsetType int, frame_length int) {
+func DecodePulses(psRangeDec *entcode.Decoder, pulses []int16, signalType int, quantOffsetType int, frame_length int) {
 	var (
 		sum_pulses [20]int
 		nLshifts   [20]int

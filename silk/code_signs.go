@@ -1,10 +1,10 @@
 package silk
 
 import (
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
-func EncodeSigns(psRangeEnc *celt.ECEnc, pulses []int8, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
+func EncodeSigns(psRangeEnc *entcode.Encoder, pulses []int8, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
 	var icdf [2]uint8
 	icdf[1] = 0
 	q_ptr := pulses
@@ -29,7 +29,7 @@ func EncodeSigns(psRangeEnc *celt.ECEnc, pulses []int8, length int, signalType i
 		q_ptr = q_ptr[SHELL_CODEC_FRAME_LENGTH:]
 	}
 }
-func decodeSigns(psRangeDec *celt.ECDec, pulses []int16, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
+func decodeSigns(psRangeDec *entcode.Decoder, pulses []int16, length int, signalType int, quantOffsetType int, sum_pulses [20]int) {
 	var (
 		p    int
 		icdf [2]uint8

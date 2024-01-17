@@ -1,7 +1,7 @@
 package silk
 
 import (
-	"github.com/gotranspile/opus/celt"
+	"github.com/gotranspile/opus/entcode"
 )
 
 func combine_pulses(out []int, in []int, len_ int) {
@@ -10,12 +10,12 @@ func combine_pulses(out []int, in []int, len_ int) {
 		out[k] = in[k*2] + in[k*2+1]
 	}
 }
-func encode_split(psRangeEnc *celt.ECEnc, p_child1 int, p int, shell_table []byte) {
+func encode_split(psRangeEnc *entcode.Encoder, p_child1 int, p int, shell_table []byte) {
 	if p > 0 {
 		psRangeEnc.EncIcdf(p_child1, shell_table[silk_shell_code_table_offsets[p]:], 8)
 	}
 }
-func decode_split(p_child1 *int16, p_child2 *int16, psRangeDec *celt.ECDec, p int, shell_table []byte) {
+func decode_split(p_child1 *int16, p_child2 *int16, psRangeDec *entcode.Decoder, p int, shell_table []byte) {
 	if p > 0 {
 		*p_child1 = int16(psRangeDec.DecIcdf(shell_table[silk_shell_code_table_offsets[p]:], 8))
 		*p_child2 = int16(p - int(*p_child1))
@@ -24,7 +24,7 @@ func decode_split(p_child1 *int16, p_child2 *int16, psRangeDec *celt.ECDec, p in
 		*p_child2 = 0
 	}
 }
-func ShellEncoder(psRangeEnc *celt.ECEnc, pulses0 []int) {
+func ShellEncoder(psRangeEnc *entcode.Encoder, pulses0 []int) {
 	var (
 		pulses1 [8]int
 		pulses2 [4]int
@@ -51,7 +51,7 @@ func ShellEncoder(psRangeEnc *celt.ECEnc, pulses0 []int) {
 	encode_split(psRangeEnc, pulses0[12], pulses1[6], silk_shell_code_table0[:])
 	encode_split(psRangeEnc, pulses0[14], pulses1[7], silk_shell_code_table0[:])
 }
-func shellDecoder(pulses0 []int16, psRangeDec *celt.ECDec, pulses4 int) {
+func shellDecoder(pulses0 []int16, psRangeDec *entcode.Decoder, pulses4 int) {
 	var (
 		pulses3 [2]int16
 		pulses2 [4]int16
