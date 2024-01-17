@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 import "math"
 

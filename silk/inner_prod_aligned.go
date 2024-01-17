@@ -1,4 +1,4 @@
-package libopus
+package silk
 
 func silk_inner_prod_aligned_scale(inVec1 []int16, inVec2 []int16, scale int, len_ int) int32 {
 	var (

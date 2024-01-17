@@ -602,6 +602,12 @@ idents:
         type: slice
       - name: input
         type: slice
+  - name: silk_inner_prod_aligned_scale
+    fields:
+      - name: inVec1
+        type: slice
+      - name: inVec2
+        type: slice
 src_files:
   - name: include/opus_types.h
     content: |
@@ -809,6 +815,8 @@ files:
   - name: silk/encode_indices.c
     disabled: true # DONE
   - name: silk/float/encode_frame_FLP.c
+    disabled: true # DONE
+  - name: silk/float/stereo_LR_to_MS.c
     disabled: true # DONE
 
   - name: silk/*.c
